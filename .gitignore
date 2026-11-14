@@ -1,0 +1,9 @@
+.godot/
+build/*
+!build/.gdignore
+portable_data/*
+!portable_data/.gdignore
+tests/output/*
+!tests/output/.gdignore
+*.tmp
+*.log
