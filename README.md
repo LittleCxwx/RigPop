@@ -120,4 +120,15 @@ docs/               使用、格式、产品规划与验收记录
 详见 [验收记录](docs/validation.md)。未进行全新未安装 Godot 的物理机器、多显示器、真实系统 DPI
 切换与下层应用点击穿透的完整人工验收；不能据此声称生产版本或全部规划完成。
 
-第三方素材与许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+## 开源许可证
+
+RigPop 的原创代码与文档采用 [MIT License](LICENSE)，版权署名为 `2026 LittleCxwx`。
+允许使用、修改、分发和商业使用；分发软件或其重要部分时，须保留版权声明和许可证全文。
+软件按现状提供，不提供担保。完整条款以 LICENSE 中的英文正文为准。
+
+第三方依赖、字体、图标和另有声明的素材遵循各自的许可，详见
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 与 `licenses/`。本项目的 MIT 许可不改变
+这些第三方内容或 `assets/slime.png` 示例素材原有的权利与许可。
+
+用户导入或创作的角色、图片与动画，其版权及许可由相应权利人决定，不会因使用 RigPop
+而自动采用 MIT；导出包中附带的 RigPop 运行代码和第三方组件仍须遵守各自的许可证。
