@@ -11,11 +11,15 @@ Windows 桌宠目录包导出。角色、像素、动作、输入与两种试演
 
 ## 直接运行
 
+普通用户请在 [GitHub Releases](https://github.com/LittleCxwx/RigPop/releases) 的 Assets 中下载
+`RigPop-<版本>-win64.zip`，完整解压后双击 `RigPop.exe`。自动生成的 Source code ZIP 是开发源码。
+
 构建产物位于 `build/RigPop.exe`。双击进入工作区，保留旁边的 `RigPop.pck`、`hosts/`
 与许可证文件。普通使用和用户导出都不需要安装 Godot、Python 或其他开发工具。
 
-可分发的干净便携目录和 ZIP 由 `tools/package.ps1` 生成到 `build/RigPop-0.1.0-win64/`
-和 `build/RigPop-0.1.0-win64.zip`。不要把开发用的导出模板与测试数据当作发布内容。
+可分发的干净便携 ZIP 由 `tools/package.ps1` 生成到 `build/RigPop-0.1.0-win64.zip`，
+附 `build/SHA256SUMS.txt`。不要把开发用的导出模板与测试数据当作发布内容。
+另一台电脑打开源码、本机构建、自定义图标和自动发布见 [构建与发布](docs/build_and_release.md)。
 
 默认保存到程序旁 `portable_data/<角色ID>/`；从源码运行则在本工程的 `portable_data/`。
 Ctrl+Shift+S 可选择其他目录。便携目录不可写会明确报错，不会静默改用其他账户目录。
@@ -72,8 +76,9 @@ python tools/download_windows_template.py
 # 同步明文导出源码模板、导入资源、导出两个 exe。
 ./tools/build.ps1 -Godot '<Godot>'
 
-# 生成干净便携目录和压缩包。
+# 生成干净便携压缩包，并在独立目录验证成品。
 ./tools/package.ps1
+./tools/verify_package.ps1
 ```
 
 `tools/download_windows_template.py` 只使用 Python 标准库和 HTTPS Range，不下载约 1.2 GB 的全平台归档。

@@ -102,7 +102,7 @@ func _draw() -> void:
 		if bones:
 			# Draw parent connection line
 			if transforms.has(p.parent):
-				var parent_pos := o + transforms[p.parent].origin * zoom
+				var parent_pos: Vector2 = o + transforms[p.parent].origin * zoom
 				draw_line(parent_pos, pos, ThemeKit.ACCENT.lightened(0.2), 2.0, true)
 
 			# Draw joint point with better styling

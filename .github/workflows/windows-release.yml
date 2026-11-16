@@ -1,0 +1,70 @@
+name: Windows Release
+
+on:
+  push:
+    tags: ["v[0-9]*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      GODOT_VERSION: "4.7.2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download pinned Godot editor
+        run: |
+          $archiveName = "Godot_v$env:GODOT_VERSION-stable_win64.exe.zip"
+          $archive = Join-Path $env:RUNNER_TEMP $archiveName
+          $engineRoot = Join-Path $env:RUNNER_TEMP "godot"
+          Invoke-WebRequest "https://github.com/godotengine/godot-builds/releases/download/$env:GODOT_VERSION-stable/$archiveName" -OutFile $archive
+          Expand-Archive -LiteralPath $archive -DestinationPath $engineRoot
+          "RIGPOP_GODOT=$(Join-Path $engineRoot "Godot_v$env:GODOT_VERSION-stable_win64_console.exe")" >> $env:GITHUB_ENV
+      - name: Download matching Windows templates
+        run: python tools/download_windows_template.py
+      - name: Build editor and desktop host
+        run: ./tools/build.ps1 -Godot $env:RIGPOP_GODOT
+      - name: Verify release tag matches application version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          $info = Get-Content build/build_info.json -Raw | ConvertFrom-Json
+          if ($env:GITHUB_REF_NAME -ne "v$($info.version)") { throw "Tag must match project.godot config/version." }
+      - name: Test source
+        run: |
+          & $env:RIGPOP_GODOT --headless --path . --script tests/run_tests.gd
+          if ($LASTEXITCODE -ne 0) { throw "Source tests failed." }
+      - name: Package portable application
+        run: ./tools/package.ps1
+      - name: Test extracted application without source files
+        run: ./tools/verify_package.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RigPop-windows-x64
+          path: |
+            build/RigPop-*-win64.zip
+            build/SHA256SUMS.txt
+            build/release-verification.json
+          if-no-files-found: error
+      - name: Publish demo release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $info = Get-Content build/build_info.json -Raw | ConvertFrom-Json
+          $archive = "build/RigPop-$($info.version)-win64.zip"
+          gh release create $env:GITHUB_REF_NAME $archive build/SHA256SUMS.txt --verify-tag --title "RigPop $($info.version) Demo" --prerelease --notes-file docs/release_notes.md
+          if ($LASTEXITCODE -ne 0) { throw "GitHub Release publishing failed." }
