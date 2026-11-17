@@ -39,14 +39,15 @@ var action_picker: OptionButton
 var library_picker: OptionButton
 var status: Label
 var title_label: Label
+var dirty_dot: Panel
 var frame_label: Label
 var canvas_label: Label
 var play_button: Button
 var save_button: Button
 var undo_button: Button
 var redo_button: Button
-var work_split: HSplitContainer
-var body_split: HSplitContainer
+var work_split: HBoxContainer
+var body_split: HBoxContainer
 var timeline_scroll: ScrollContainer
 var file_dialog: FileDialog
 var confirm: ConfirmationDialog
@@ -82,7 +83,7 @@ func _ready() -> void:
 	resized.connect(responsive)
 	responsive()
 
-func label(text: String, font_size: int = 14, color: Color = ThemeKit.INK) -> Label:
+func label(text: String, font_size: int = 13, color: Color = ThemeKit.INK_2) -> Label:
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_size_override("font_size", font_size)
@@ -91,13 +92,22 @@ func label(text: String, font_size: int = 14, color: Color = ThemeKit.INK) -> La
 	l.custom_minimum_size.x = minf(210, theme.default_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 2)
 	return l
 
+## 分区小标题：11 px、600 字重、加一点字距，只靠这点差异建立层级。
+func heading(parent: Node, text: String) -> Label:
+	var l := label(text, 11, ThemeKit.MUTED)
+	l.add_theme_font_override("font", ThemeKit.font(ThemeKit.W_TITLE, 1))
+	l.custom_minimum_size.x = 0
+	parent.add_child(l)
+	return l
+
 func button(parent: Node, text: String, callback: Callable, icon: String = "") -> Button:
 	var b := Button.new()
 	b.text = text
-	b.custom_minimum_size.y = 32
-	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size.y = 30
+	b.focus_mode = Control.FOCUS_ALL
+	b.add_theme_font_override("font", ThemeKit.font(ThemeKit.W_LABEL))
 	if not icon.is_empty():
-		b.icon = Icons.get_icon(icon)
+		b.icon = Icons.get_icon(icon, 17)
 	b.pressed.connect(func() -> void:
 		flush_field()
 		callback.call())
@@ -106,9 +116,67 @@ func button(parent: Node, text: String, callback: Callable, icon: String = "") -
 
 func tool_button(parent: Node, icon: String, tip: String, callback: Callable) -> Button:
 	var b := button(parent, "", callback, icon)
-	b.custom_minimum_size = Vector2(32, 32)
+	b.custom_minimum_size = Vector2(28, 28)
 	b.tooltip_text = tip
 	return b
+
+## 实心主按钮：全屏只有它用墨色底，一眼知道"下一步点这个"。
+func primary_button(parent: Node, text: String, callback: Callable) -> Button:
+	var b := button(parent, text, callback)
+	var ink_text := Color("f6f3fb")
+	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		b.add_theme_color_override(state, ink_text)
+	b.add_theme_stylebox_override("normal", ThemeKit.flat(ThemeKit.INK, 3, Color.TRANSPARENT, 13, 5))
+	b.add_theme_stylebox_override("hover", ThemeKit.flat(Color("342e40"), 3, Color.TRANSPARENT, 13, 5))
+	b.add_theme_stylebox_override("pressed", ThemeKit.flat(Color("141019"), 3, Color.TRANSPARENT, 13, 5))
+	b.add_theme_stylebox_override("disabled", ThemeKit.flat(ThemeKit.LINE_2, 3, Color.TRANSPARENT, 13, 5))
+	return b
+
+## 对话框与列表里的描边按钮：有明确边界，避免在纸色底上糊成一片。
+func outline_button(parent: Node, text: String, callback: Callable, icon: String = "") -> Button:
+	var b := button(parent, text, callback, icon)
+	b.custom_minimum_size.y = 32
+	b.add_theme_stylebox_override("normal", ThemeKit.flat(ThemeKit.SURFACE, 3, ThemeKit.LINE, 11, 5))
+	b.add_theme_stylebox_override("hover", ThemeKit.flat(ThemeKit.SURFACE, 3, ThemeKit.LINE_2, 11, 5))
+	b.add_theme_stylebox_override("pressed", ThemeKit.flat(ThemeKit.PAPER_2, 3, ThemeKit.LINE_2, 11, 5))
+	return b
+
+## 侧栏里的"行为行"：左对齐、带图标，看起来像可点的列表项而不是按钮。
+func action_row(parent: Node, text: String, icon: String, callback: Callable) -> Button:
+	var b := button(parent, text, callback, icon)
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.custom_minimum_size.y = 30
+	return b
+
+## 顶栏模式页签：无边框，选中态只留一条 1.5 号的底线。
+func tab_button(parent: Node, text: String, callback: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.toggle_mode = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(0, 47)
+	b.add_theme_font_override("font", ThemeKit.font(ThemeKit.W_BODY))
+	b.add_theme_font_size_override("font_size", 13)
+	b.add_theme_color_override("font_color", ThemeKit.MUTED)
+	b.add_theme_color_override("font_hover_color", ThemeKit.INK_2)
+	b.add_theme_color_override("font_pressed_color", ThemeKit.INK)
+	b.add_theme_color_override("font_hover_pressed_color", ThemeKit.INK)
+	b.add_theme_stylebox_override("normal", tab_box(Color.TRANSPARENT))
+	b.add_theme_stylebox_override("hover", tab_box(ThemeKit.LINE_2))
+	b.add_theme_stylebox_override("pressed", tab_box(ThemeKit.INK))
+	b.add_theme_stylebox_override("hover_pressed", tab_box(ThemeKit.INK))
+	b.pressed.connect(func() -> void:
+		flush_field()
+		callback.call())
+	parent.add_child(b)
+	return b
+
+func tab_box(line: Color) -> StyleBoxFlat:
+	var s := ThemeKit.flat(Color.TRANSPARENT, 0, Color.TRANSPARENT, 13, 0)
+	s.border_width_bottom = 2
+	s.border_color = line
+	return s
 
 func expand(parent: Node) -> Control:
 	var c := Control.new()
@@ -116,23 +184,47 @@ func expand(parent: Node) -> Control:
 	parent.add_child(c)
 	return c
 
+func gap(parent: Node, height: int = 10) -> Control:
+	var c := Control.new()
+	c.custom_minimum_size.y = height
+	parent.add_child(c)
+	return c
+
 func margin(parent: Node, amount: int = 12) -> MarginContainer:
+	return inset(parent, amount, amount, amount, amount)
+
+func inset(parent: Node, left: int, right: int, top: int, bottom: int) -> MarginContainer:
 	var m := MarginContainer.new()
-	for side in ["left", "right", "top", "bottom"]:
-		m.add_theme_constant_override("margin_" + side, amount)
+	m.add_theme_constant_override("margin_left", left)
+	m.add_theme_constant_override("margin_right", right)
+	m.add_theme_constant_override("margin_top", top)
+	m.add_theme_constant_override("margin_bottom", bottom)
 	parent.add_child(m)
 	return m
 
-func heading(parent: Node, text: String) -> void:
-	parent.add_child(label(text, 12, ThemeKit.MUTED))
+## 1 px 竖线，用来分组而不加边框。
+func rule_v(height: int = 16) -> Panel:
+	var p := Panel.new()
+	p.custom_minimum_size = Vector2(1, height)
+	p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	p.add_theme_stylebox_override("panel", ThemeKit.flat(ThemeKit.LINE))
+	return p
+
+## 未保存小圆点：状态只用一个点表示，不写进标题。
+func mark_dot(size: int = 5, color: Color = ThemeKit.SIGNAL) -> Panel:
+	var p := Panel.new()
+	p.custom_minimum_size = Vector2(size, size)
+	p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	p.add_theme_stylebox_override("panel", ThemeKit.flat(color, int(size / 2.0)))
+	return p
+
 
 func build_ui() -> void:
 	WorkspaceLayout.new(self).build()
 
 func responsive() -> void:
 	if not is_instance_valid(timeline_scroll): return
-	timeline_scroll.custom_minimum_size.y = 130 if size.y < 720 else 176
-	work_split.split_offset = maxi(280, int(size.x) - body_split.split_offset - 270)
+	timeline_scroll.custom_minimum_size.y = 116 if size.y < 720 else 148
 	update_canvas.call_deferred()
 
 func refresh_all() -> void:
@@ -234,11 +326,15 @@ func update_canvas() -> void:
 	timeline.clip = Character.find_action(doc.model, action_id)
 	timeline.frame = frame
 	timeline.selected = selected
-	timeline.custom_minimum_size.y = 26 + doc.model.parts.size() * 28
-	timeline.custom_minimum_size.x = maxi(400, 146 + int(timeline.clip.get("frames", 8)) * 24)
+	timeline.custom_minimum_size.y = 22 + doc.model.parts.size() * 27
+	var strip := maxi(400, 152 + int(timeline.clip.get("frames", 8)) * 24)
+	# 帧数少时也让轨道铺满可视宽度，避免轨道带在半路截断。
+	if timeline_scroll != null:
+		strip = maxi(strip, int(timeline_scroll.size.x))
+	timeline.custom_minimum_size.x = strip
 	timeline.queue_redraw()
 	frame_label.text = "%02d / %02d" % [frame + 1, int(timeline.clip.get("frames", 1))]
-	play_button.icon = Icons.get_icon("pause" if playing else "play")
+	play_button.icon = Icons.get_icon("pause" if playing else "play", 17)
 
 func current_asset(p: Dictionary) -> String:
 	return str(Character.pose(Character.find_action(doc.model, action_id), p.id, frame).get("asset", p.asset))
@@ -290,7 +386,8 @@ func edit(text: String, callback: Callable) -> void:
 	commit_change(text)
 
 func update_title() -> void:
-	title_label.text = "%s%s" % [doc.model.name, "  ·  未保存" if stored_dirty else "  ·  已保存"]
+	title_label.text = doc.model.name
+	if dirty_dot != null: dirty_dot.visible = stored_dirty
 	get_window().title = "RigPop · %s%s" % [doc.model.name, " *" if stored_dirty else ""]
 	undo_button.disabled = history.undo_stack.is_empty()
 	redo_button.disabled = history.redo_stack.is_empty()
@@ -337,7 +434,7 @@ func set_zoom(amount: int) -> void:
 func notify(text: String, error: bool = false) -> void:
 	status.text = text
 	status.tooltip_text = text
-	status.add_theme_color_override("font_color", Color("ba5c4e") if error else ThemeKit.MUTED)
+	status.add_theme_color_override("font_color", ThemeKit.SIGNAL if error else ThemeKit.MUTED)
 	if error:
 		var dialog := AcceptDialog.new()
 		dialog.title = "操作未完成"
@@ -396,9 +493,9 @@ func show_new() -> void:
 	dialog.min_size = Vector2i(360, 160)
 	var col := VBoxContainer.new()
 	dialog.add_child(col)
-	button(col, "薄荷旅人 · 分部件人形", func() -> void: dialog.hide(); guard(func() -> void: new_character("traveler")))
-	button(col, "果冻团子 · 非人形", func() -> void: dialog.hide(); guard(func() -> void: new_character("slime")))
-	button(col, "空白角色", func() -> void: dialog.hide(); guard(func() -> void: new_character("empty")))
+	outline_button(col, "薄荷旅人 · 分部件人形", func() -> void: dialog.hide(); guard(func() -> void: new_character("traveler")))
+	outline_button(col, "果冻团子 · 非人形", func() -> void: dialog.hide(); guard(func() -> void: new_character("slime")))
+	outline_button(col, "空白角色", func() -> void: dialog.hide(); guard(func() -> void: new_character("empty")))
 	add_child(dialog)
 	dialog.popup_centered()
 	dialog.canceled.connect(dialog.queue_free)
@@ -544,7 +641,7 @@ func show_export() -> void:
 	var col := VBoxContainer.new()
 	dialog.add_child(col)
 	for target in ["Godot", "桌宠", "工程"]:
-		button(col, {"Godot": "Godot 角色包", "桌宠": "Windows 桌宠包", "工程": "可编辑工程副本"}[target], func() -> void:
+		outline_button(col, {"Godot": "Godot 角色包", "桌宠": "Windows 桌宠包", "工程": "可编辑工程副本"}[target], func() -> void:
 			dialog.hide()
 			export_kind = target
 			file_purpose = "export"
@@ -655,7 +752,8 @@ func verify_install() -> void:
 func name_field(parent: Node, value: String, callback: Callable) -> void:
 	var field := LineEdit.new()
 	field.text = value
-	field.custom_minimum_size.y = 30
+	field.custom_minimum_size.y = 28
+	field.add_theme_font_override("font", ThemeKit.font(ThemeKit.W_BODY))
 	field.focus_exited.connect(func() -> void:
 		var text := field.text.strip_edges()
 		if not text.is_empty() and text != value: callback.call(text))
@@ -664,16 +762,19 @@ func name_field(parent: Node, value: String, callback: Callable) -> void:
 
 func number_field(parent: Node, title: String, value: float, minimum: float, maximum: float, step: float, callback: Callable) -> SpinBox:
 	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
 	parent.add_child(row)
-	var l := label(title, 12)
+	var l := label(title, 13, ThemeKit.INK_2)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.custom_minimum_size.x = 0
 	row.add_child(l)
 	var spin := SpinBox.new()
 	spin.min_value = minimum
 	spin.max_value = maximum
 	spin.step = step
 	spin.value = value
-	spin.custom_minimum_size.x = 102
+	spin.custom_minimum_size = Vector2(96, 26)
+	spin.get_line_edit().add_theme_font_override("font", ThemeKit.font(ThemeKit.W_BODY))
 	spin.value_changed.connect(callback)
 	row.add_child(spin)
 	return spin
@@ -682,6 +783,8 @@ func check_field(parent: Node, title: String, value: bool, callback: Callable) -
 	var check := CheckBox.new()
 	check.text = title
 	check.button_pressed = value
+	check.custom_minimum_size.y = 26
+	check.add_theme_font_override("font", ThemeKit.font(ThemeKit.W_BODY))
 	check.toggled.connect(callback)
 	parent.add_child(check)
 	return check
@@ -820,10 +923,10 @@ func show_controls() -> void:
 			row.add_child(command)
 			tool_button(row, "trash", "移除此绑定", func() -> void: row.hide(); b["removed"] = true)
 	render.call()
-	button(col, "添加绑定", func() -> void:
+	outline_button(col, "添加绑定", func() -> void:
 		bindings.append({"key": "E", "gesture": "tap", "command": "idle"})
 		render.call(), "new")
-	var warning := label("", 12, Color("ba5c4e"))
+	var warning := label("", 12, ThemeKit.SIGNAL)
 	col.add_child(warning)
 	dialog.dialog_hide_on_ok = false
 	dialog.confirmed.connect(func() -> void:

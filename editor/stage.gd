@@ -28,7 +28,7 @@ func _ready() -> void:
 	clip_contents = true
 	mouse_default_cursor_shape = Control.CURSOR_CROSS
 	ghost = View.new()
-	ghost.modulate = Color(0.4, 0.75, 0.65, 0.25)
+	ghost.modulate = Color(0.95, 0.93, 0.9, 0.22)
 	add_child(ghost)
 	view = View.new()
 	add_child(view)
@@ -69,21 +69,19 @@ func update_view(model: Dictionary, textures: Dictionary, action: String, frame:
 	queue_redraw()
 
 func _draw() -> void:
-	# Refined canvas background with better contrast
-	draw_rect(Rect2(Vector2.ZERO, size), Color("2a2f33"))
+	draw_rect(Rect2(Vector2.ZERO, size), ThemeKit.CANVAS)
 
-	# Subtle checkerboard pattern
+	# 极淡的方格底：只为提示"这里是画布"，不与像素争夺注意力。
 	if checker:
-		for y in range(0, int(size.y), 24):
-			for x in range(0, int(size.x), 24):
-				if (x / 24 + y / 24) % 2 == 0:
-					draw_rect(Rect2(x, y, 24, 24), Color("2f3538"))
+		for y in range(0, int(size.y), 16):
+			for x in range(0, int(size.x), 16):
+				if (x / 16 + y / 16) % 2 == 0:
+					draw_rect(Rect2(x, y, 16, 16), ThemeKit.CANVAS_CHECK)
 
 	var o := origin()
 
-	# Draw grid axes with refined colors
-	draw_line(Vector2(0, o.y), Vector2(size.x, o.y), Color("454d52"), 1.5)
-	draw_line(Vector2(o.x, 0), Vector2(o.x, size.y), Color("3d4549"), 1.5)
+	draw_line(Vector2(0, o.y), Vector2(size.x, o.y), ThemeKit.CANVAS_LINE, 1.0)
+	draw_line(Vector2(o.x, 0), Vector2(o.x, size.y), ThemeKit.CANVAS_LINE, 1.0)
 
 	if view == null:
 		return
@@ -92,7 +90,6 @@ func _draw() -> void:
 	ghost.position = o
 	var transforms := Character.transforms(view.model, Character.find_action(view.model, view.action_id), view.frame)
 
-	# Draw bone connections with improved visibility
 	for p in view.model.get("parts", []):
 		if not transforms.has(p.id):
 			continue
@@ -100,30 +97,23 @@ func _draw() -> void:
 		var pos: Vector2 = o + t.origin * zoom
 
 		if bones:
-			# Draw parent connection line
 			if transforms.has(p.parent):
 				var parent_pos: Vector2 = o + transforms[p.parent].origin * zoom
-				draw_line(parent_pos, pos, ThemeKit.ACCENT.lightened(0.2), 2.0, true)
+				draw_line(parent_pos, pos, Color(ThemeKit.CANVAS_ANCHOR, 0.5), 1.0, true)
+			draw_circle(pos, 2.5, Color(ThemeKit.CANVAS_ANCHOR, 0.9))
 
-			# Draw joint point with better styling
-			draw_circle(pos, 4, ThemeKit.ACCENT)
-			draw_circle(pos, 4, ThemeKit.ACCENT_PRESSED, false, 1.5)
-
-		# Enhanced selection highlight
 		if p.id == selected and view.textures.has(p.asset):
 			var tex: Texture2D = view.textures[p.asset]
 			var corners := PackedVector2Array()
 			for point in [Vector2.ZERO, Vector2(tex.get_width(), 0), tex.get_size(), Vector2(0, tex.get_height()), Vector2.ZERO]:
 				corners.append(o + (t * (point - Character.vec(p.pivot))) * zoom)
 
-			# Draw selection bounds with accent color
-			draw_polyline(corners, ThemeKit.ACCENT, 2.0, true)
+			draw_polyline(corners, Color(ThemeKit.PAPER, 0.85), 1.0, true)
+			for i in range(corners.size() - 1):
+				draw_rect(Rect2(corners[i] - Vector2(1.5, 1.5), Vector2(3, 3)), ThemeKit.PAPER)
 
-			# Draw pivot crosshair with warm accent
-			var pivot_color := Color("f5a962")
-			draw_line(pos - Vector2(6, 0), pos + Vector2(6, 0), pivot_color, 2.5)
-			draw_line(pos - Vector2(0, 6), pos + Vector2(0, 6), pivot_color, 2.5)
-			draw_circle(pos, 2, pivot_color)
+			draw_line(pos - Vector2(5, 0), pos + Vector2(5, 0), ThemeKit.SIGNAL, 1.0)
+			draw_line(pos - Vector2(0, 5), pos + Vector2(0, 5), ThemeKit.SIGNAL, 1.0)
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
