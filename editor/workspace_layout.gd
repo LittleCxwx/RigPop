@@ -2,6 +2,7 @@ extends RefCounted
 
 const ThemeKit = preload("res://editor/theme.gd")
 const Icons = preload("res://editor/icons.gd")
+const ConfirmBox = preload("res://editor/confirm_box.gd")
 const Stage = preload("res://editor/stage.gd")
 const PixelCanvas = preload("res://editor/pixel_canvas.gd")
 const Timeline = preload("res://editor/timeline.gd")
@@ -76,9 +77,9 @@ func build_topbar(root: VBoxContainer) -> void:
 	mark.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	mark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	brand.add_child(mark)
-	var wordmark := app.label("RigPop", 16, ThemeKit.INK)
+	var wordmark = app.label("RigPop", 16, ThemeKit.INK)
 	wordmark.add_theme_font_override("font", ThemeKit.font(ThemeKit.W_TITLE))
-	wordmark.custom_minimum_size.x = 0
+	app.resize_label(wordmark, 120.0)
 	wordmark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	brand.add_child(wordmark)
 
@@ -93,7 +94,6 @@ func build_topbar(root: VBoxContainer) -> void:
 	doc.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(doc)
 	app.title_label = app.label("", 13, ThemeKit.INK_2)
-	app.title_label.custom_minimum_size.x = 0
 	app.title_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	doc.add_child(app.title_label)
 	app.dirty_dot = app.mark_dot()
@@ -105,9 +105,9 @@ func build_topbar(root: VBoxContainer) -> void:
 	actions.add_theme_constant_override("separation", 2)
 	actions.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(actions)
-	var open := app.button(actions, "打开", app.open_project)
+	var open = app.button(actions, "打开", app.open_project)
 	open.tooltip_text = "打开可编辑角色工程"
-	var export := app.button(actions, "导出", app.show_export)
+	var export = app.button(actions, "导出", app.show_export)
 	export.tooltip_text = "导出 Godot 角色包、桌宠包或工程副本"
 	hspace(actions, 6)
 	app.save_button = app.primary_button(actions, "保存", app.save_project)
@@ -135,7 +135,7 @@ func build_library(parent: Node) -> void:
 
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 6)
-	var inset := app.inset(panel, 12, 10, 14, 10)
+	var inset = app.inset(panel, 12, 10, 14, 10)
 	inset.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	inset.add_child(col)
 
@@ -152,7 +152,7 @@ func build_library(parent: Node) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	col.add_child(row)
-	var fresh := app.outline_button(row, "新建", app.show_new)
+	var fresh = app.outline_button(row, "新建", app.show_new)
 	fresh.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	app.tool_button(row, "copy", "复制当前角色", app.duplicate_character)
 
@@ -203,12 +203,12 @@ func build_workspace(parent: Node) -> void:
 
 	divider(row)
 
-	var bones := app.tool_button(row, "bone", "显示骨骼与枢轴", func() -> void:
+	var bones = app.tool_button(row, "bone", "显示骨骼与枢轴", func() -> void:
 		app.stage.bones = not app.stage.bones
 		app.stage.queue_redraw())
 	bones.toggle_mode = true
 	bones.button_pressed = true
-	var onion := app.tool_button(row, "eye", "洋葱皮：叠加显示上一帧", func() -> void:
+	var onion = app.tool_button(row, "eye", "洋葱皮：叠加显示上一帧", func() -> void:
 		app.stage.onion = not app.stage.onion
 		app.update_canvas())
 	onion.toggle_mode = true
@@ -279,7 +279,7 @@ func build_inspector(parent: Node) -> void:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	panel.add_child(scroll)
-	var inset := app.inset(scroll, 14, 12, 14, 18)
+	var inset = app.inset(scroll, 14, 12, 14, 18)
 	inset.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	app.inspector = VBoxContainer.new()
 	app.inspector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -337,7 +337,7 @@ func build_timeline(parent: Node) -> void:
 
 	divider(bar)
 
-	var key_toggle := app.button(bar, "关键帧", func() -> void:
+	var key_toggle = app.button(bar, "关键帧", func() -> void:
 		app.key_edit = not app.key_edit
 		app.rebuild_inspector())
 	key_toggle.toggle_mode = true
@@ -387,7 +387,7 @@ func build_footer(root: VBoxContainer) -> void:
 	app.status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	app.status.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(app.status)
-	var version := app.label("v0.1.0  ·  Godot 4.7.2  ·  便携模式", 11, ThemeKit.MUTED)
+	var version = app.label("v0.1.0  ·  Godot 4.7.2  ·  便携模式", 11, ThemeKit.MUTED)
 	version.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(version)
 
@@ -398,11 +398,8 @@ func build_dialogs() -> void:
 	app.file_dialog.file_selected.connect(app.file_selected)
 	app.file_dialog.dir_selected.connect(app.directory_selected)
 	app.add_child(app.file_dialog)
-	app.confirm = ConfirmationDialog.new()
-	app.confirm.title = "未保存的修改"
-	app.confirm.dialog_text = "当前角色有未保存修改。继续将丢弃这些修改。"
-	app.confirm.ok_button_text = "丢弃并继续"
-	app.confirm.cancel_button_text = "返回编辑"
+	app.confirm = ConfirmBox.new()
+	app.confirm.setup("未保存的修改", "当前角色有未保存的修改，继续操作会丢弃这些改动。", "丢弃并继续", "返回编辑")
 	app.confirm.confirmed.connect(func() -> void:
 		if app.pending_action.is_valid(): app.pending_action.call())
 	app.add_child(app.confirm)
@@ -426,7 +423,7 @@ func divider(parent: Node) -> void:
 
 ## 栏内的小号图标按钮（标题行、时间轴动作行）。
 func small_tool(parent: Node, icon: String, tip: String, callback: Callable) -> Button:
-	var b := app.tool_button(parent, icon, tip, callback)
+	var b = app.tool_button(parent, icon, tip, callback)
 	b.custom_minimum_size = Vector2(22, 22)
 	b.icon = Icons.get_icon(icon, 14, ThemeKit.INK_2)
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER

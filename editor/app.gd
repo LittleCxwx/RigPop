@@ -50,7 +50,7 @@ var work_split: HBoxContainer
 var body_split: HBoxContainer
 var timeline_scroll: ScrollContainer
 var file_dialog: FileDialog
-var confirm: ConfirmationDialog
+var confirm
 var pending_action: Callable
 var file_purpose := ""
 var export_kind := ""
@@ -74,6 +74,9 @@ func _ready() -> void:
 	if not recent_paths.is_empty() and not "--verify-install" in OS.get_cmdline_user_args():
 		var last := Store.new()
 		if last.open_file(recent_paths[0]).is_empty(): doc = last
+	# 启动时的内容就是基线：默认模板或刚打开的文件都还没有"改动"。
+	# 脏标记只由 fingerprint 与基线比较得出，所以撤销回原状会自动变回已保存。
+	doc.saved_fingerprint = doc.fingerprint()
 	build_ui()
 	refresh_all()
 	confirm.canceled.connect(refresh_library)
@@ -89,8 +92,19 @@ func label(text: String, font_size: int = 13, color: Color = ThemeKit.INK_2) -> 
 	l.add_theme_font_size_override("font_size", font_size)
 	l.add_theme_color_override("font_color", color)
 	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	l.custom_minimum_size.x = minf(210, theme.default_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 2)
+	resize_label(l)
 	return l
+
+## 开了省略号的 Label 最小宽度只有 1 px，改完文本必须同步最小宽度，
+## 否则它会被容器压成一条竖线（顶栏文档名踩过这个坑）。
+func resize_label(l: Label, cap: float = 240.0) -> void:
+	var size: int = l.get_theme_font_size("font_size")
+	if size <= 0: size = 13
+	var f: Font = theme.default_font
+	if l.has_theme_font_override("font") and l.get_theme_font("font") != null:
+		f = l.get_theme_font("font")
+	l.custom_minimum_size.x = minf(cap, f.get_string_size(
+			l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + 8)
 
 ## 分区小标题：11 px、600 字重、加一点字距，只靠这点差异建立层级。
 func heading(parent: Node, text: String) -> Label:
@@ -123,6 +137,11 @@ func tool_button(parent: Node, icon: String, tip: String, callback: Callable) ->
 ## 实心主按钮：全屏只有它用墨色底，一眼知道"下一步点这个"。
 func primary_button(parent: Node, text: String, callback: Callable) -> Button:
 	var b := button(parent, text, callback)
+	style_primary(b)
+	return b
+
+## 把任意按钮改成实心主按钮的样子（对话框确认键复用同一套皮肤）。
+func style_primary(b: Button) -> void:
 	var ink_text := Color("f6f3fb")
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		b.add_theme_color_override(state, ink_text)
@@ -130,16 +149,19 @@ func primary_button(parent: Node, text: String, callback: Callable) -> Button:
 	b.add_theme_stylebox_override("hover", ThemeKit.flat(Color("342e40"), 3, Color.TRANSPARENT, 13, 5))
 	b.add_theme_stylebox_override("pressed", ThemeKit.flat(Color("141019"), 3, Color.TRANSPARENT, 13, 5))
 	b.add_theme_stylebox_override("disabled", ThemeKit.flat(ThemeKit.LINE_2, 3, Color.TRANSPARENT, 13, 5))
-	return b
 
 ## 对话框与列表里的描边按钮：有明确边界，避免在纸色底上糊成一片。
 func outline_button(parent: Node, text: String, callback: Callable, icon: String = "") -> Button:
 	var b := button(parent, text, callback, icon)
 	b.custom_minimum_size.y = 32
+	style_outline(b)
+	return b
+
+## 把任意按钮改成描边按钮的样子。
+func style_outline(b: Button) -> void:
 	b.add_theme_stylebox_override("normal", ThemeKit.flat(ThemeKit.SURFACE, 3, ThemeKit.LINE, 11, 5))
 	b.add_theme_stylebox_override("hover", ThemeKit.flat(ThemeKit.SURFACE, 3, ThemeKit.LINE_2, 11, 5))
 	b.add_theme_stylebox_override("pressed", ThemeKit.flat(ThemeKit.PAPER_2, 3, ThemeKit.LINE_2, 11, 5))
-	return b
 
 ## 侧栏里的"行为行"：左对齐、带图标，看起来像可点的列表项而不是按钮。
 func action_row(parent: Node, text: String, icon: String, callback: Callable) -> Button:
@@ -387,6 +409,7 @@ func edit(text: String, callback: Callable) -> void:
 
 func update_title() -> void:
 	title_label.text = doc.model.name
+	resize_label(title_label, 200.0)
 	if dirty_dot != null: dirty_dot.visible = stored_dirty
 	get_window().title = "RigPop · %s%s" % [doc.model.name, " *" if stored_dirty else ""]
 	undo_button.disabled = history.undo_stack.is_empty()
@@ -447,7 +470,7 @@ func notify(text: String, error: bool = false) -> void:
 func guard(callback: Callable) -> void:
 	if doc.dirty():
 		pending_action = callback
-		confirm.popup_centered(Vector2i(450, 160))
+		confirm.open()
 	else: callback.call()
 
 func save_project() -> void:

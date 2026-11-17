@@ -46,7 +46,7 @@ func part_inspector(p: Dictionary) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	app.inspector.add_child(row)
-	var caption := app.label("父节点", 13, ThemeKit.INK_2)
+	var caption = app.label("父节点", 13, ThemeKit.INK_2)
 	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	caption.custom_minimum_size.x = 0
 	row.add_child(caption)
@@ -183,7 +183,7 @@ func pixel_inspector(p: Dictionary) -> void:
 	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	chip.add_theme_stylebox_override("panel", ThemeKit.flat(app.pixel.color, 3, ThemeKit.LINE_2))
 	swatch_row.add_child(chip)
-	var hex_label := app.label("#" + app.pixel.color.to_html().to_upper(), 12, ThemeKit.INK_2)
+	var hex_label = app.label("#" + app.pixel.color.to_html().to_upper(), 12, ThemeKit.INK_2)
 	hex_label.custom_minimum_size.x = 0
 	swatch_row.add_child(hex_label)
 
@@ -204,7 +204,7 @@ func game_inspector() -> void:
 	rule()
 	section("当前绑定")
 	for binding in app.doc.model.bindings:
-		var line := app.label("%s　·　%s" % [binding.key, binding.command], 12, ThemeKit.INK_2)
+		var line = app.label("%s　·　%s" % [binding.key, binding.command], 12, ThemeKit.INK_2)
 		line.custom_minimum_size.x = 0
 		app.inspector.add_child(line)
 
@@ -225,7 +225,7 @@ func desktop_inspector() -> void:
 	rule()
 	section("透明窗口 · 拖动 · 右键菜单")
 	for text in ["全局快捷键：暂不支持", "整窗点击穿透：暂不支持"]:
-		var line := app.label(text, 12, ThemeKit.MUTED)
+		var line = app.label(text, 12, ThemeKit.MUTED)
 		line.custom_minimum_size.x = 0
 		app.inspector.add_child(line)
 

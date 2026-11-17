@@ -29,6 +29,7 @@ const PATHS := {
 	"image": '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m4 17 5-5 4 4 3-3 4 4"/>',
 	"keys": '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h1M10 10h1M14 10h1M18 10h1M8 14h8"/>',
 	"chevron_down": '<path d="m6 9 6 6 6-6"/>',
+	"close": '<path d="M6 6l12 12M18 6 6 18"/>',
 }
 
 static var cache := {}
