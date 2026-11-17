@@ -1,7 +1,7 @@
 # 历史产品规划
 
 本文件保留独立实现前的原始规划快照（2026-11-13）。其中“当前状态”描述的是实现前状态。
-实际功能与验证结果以根目录 README.md 为准。
+当前功能见根目录 README.md 与 docs/development.md，验证结果见 docs/validation.md。
 
 # RigPop
 

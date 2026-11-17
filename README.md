@@ -1,134 +1,77 @@
 # RigPop
 
-**角色动画与桌宠编辑器 · 0.1.0 Demo**
+<img src="assets/rigpop-icon.png" alt="RigPop logo" width="128" height="128">
 
-RigPop 现在是独立的 Godot 4.7.2 工程，提供可双击运行的 Windows 创作应用、Godot 角色包导出和
-Windows 桌宠目录包导出。角色、像素、动作、输入与两种试演共用同一份 JSON/PNG 创作数据。
+English | [简体中文](README_ZH.md)
 
-开发约定见 [Agent.md](Agent.md)，使用步骤见 [使用说明](docs/user_guide.md)，格式见
-[数据契约](docs/format.md)，原始完整产品规划保留在 [产品规划](docs/product_spec.md)。
-本次实现不修改外层 FlufflightDemo，也不在运行时读取父目录。
+A Windows desktop editor for pixel-art characters, animation, and desktop pets.
+Create a character once, then export it as a Godot character package or a standalone Windows desktop pet.
 
-## 直接运行
+RigPop is an early-stage demo. The application interface is currently in Simplified Chinese.
 
-普通用户请在 [GitHub Releases](https://github.com/LittleCxwx/RigPop/releases) 的 Assets 中下载
-`RigPop-<版本>-win64.zip`，完整解压后双击 `RigPop.exe`。自动生成的 Source code ZIP 是开发源码。
+## Features
 
-构建产物位于 `build/RigPop.exe`。双击进入工作区，保留旁边的 `RigPop.pck`、`hosts/`
-与许可证文件。普通使用和用户导出都不需要安装 Godot、Python 或其他开发工具。
+- Create characters from individual body parts or complete sprite frames.
+- Edit pixels and palettes, import images, and slice regular sprite sheets.
+- Animate with position and rotation keyframes, texture changes, and layered tracks.
+- Configure keyboard and mouse bindings, with separate game and desktop previews.
+- Save editable projects as portable JSON and PNG files.
+- Export editable projects, Godot character packages, and Windows desktop pet bundles.
 
-可分发的干净便携 ZIP 由 `tools/package.ps1` 生成到 `build/RigPop-0.1.0-win64.zip`，
-附 `build/SHA256SUMS.txt`。不要把开发用的导出模板与测试数据当作发布内容。
-另一台电脑打开源码、本机构建、自定义图标和自动发布见 [构建与发布](docs/build_and_release.md)。
+## Download
 
-默认保存到程序旁 `portable_data/<角色ID>/`；从源码运行则在本工程的 `portable_data/`。
-Ctrl+Shift+S 可选择其他目录。便携目录不可写会明确报错，不会静默改用其他账户目录。
-Godot 的系统日志与图形缓存不属于可编辑工程，搬移无需携带 `.godot/`。
+Download `RigPop-<version>-win64.zip` from [GitHub Releases](https://github.com/LittleCxwx/RigPop/releases).
 
-## 已实现
+1. Extract the entire archive into a writable folder.
+2. Run `RigPop.exe`.
+3. Keep `RigPop.pck`, `hosts/`, and the license files alongside the application.
 
-| 工作流 | 当前能力 |
+The portable application does not require Godot, Python, or developer tools.
+The automatically generated **Source code** archives contain the development project.
+
+**Requirements:** Windows 10/11 x64 and a graphics driver supporting OpenGL 3.3.
+
+## Getting Started
+
+Create a character from a template or import your own artwork, edit its parts and animations,
+then preview or export it from the workspace.
+
+Projects are saved next to the application in `portable_data/` by default.
+Keep each project's JSON and PNG assets together when moving it to another computer.
+
+See the [user guide](docs/user_guide.md) for the editing and export workflows.
+
+## Development
+
+Use **Godot 4.7.2 stable, standard edition**.
+
+1. Clone or download this repository.
+2. Import the root `project.godot` in Godot and wait for resource import to finish.
+3. Press **F5** to run the application.
+
+Windows builds also require PowerShell 7 and Python 3 for the template downloader.
+See [Build and Release](docs/build_and_release.md) for build commands and packaging.
+
+## Documentation
+
+The detailed guides are currently available in Simplified Chinese.
+
+| Document | Contents |
 | --- | --- |
-| 独立应用 | 中文原生 Control 界面、统一主题与图标、四个固定工作区、可滚动面板 |
-| 角色库 | 人形/史莱姆/空结构、新建/复制/改名、保存重开、最近工程、未保存确认 |
-| 部件 | 添加/删除、父子挂接、位置/旋转/枢轴、独立绘制层级、可见性、替换图片、画布拖动 |
-| 像素 | 铅笔/橡皮/填充/取色、完整调色与色板、连续笔画撤销、裁边、画布、最近邻重采样 |
-| 动作 | 新增/复制/改名/删除、长度/FPS/循环、位置和角度关键帧、逐帧换图、叠加轨道 |
-| 预览 | 选帧、播放暂停、倍率、镜像、上一帧洋葱皮、骨骼/枢轴、整数缩放与平移 |
-| 图片与图集 | PNG/JPG/WebP 导入预览；规则行列图集切帧；整体精灵图或部件换图 |
-| 控制 | 键鼠名称、持续移动、点按/长按/双击、冲突检查、失焦与快捷键隔离 |
-| 游戏试演 | 独立地图场景、可见墙/障碍/出生点/相机、移动与碰撞、招手叠加、速度/碰撞半径、复位 |
-| 桌宠 | 真实独立透明窗口、拖动、置顶、漫游、键鼠动作、轮廓凸包穿透、右键菜单与退出 |
-| 存取 | 格式校验、安全相对路径、未知模块保留、图片身份独立、临时写入/备份、工程副本 |
-| Godot 导出 | 可实例化场景、按角色 ID 分目录、可复用运行源码、PNG/JSON、manifest 与独立演示工程 |
-| 桌宠导出 | 预构建 Windows 宿主 + PCK + 外部角色数据，宿主不含编辑 UI 或游戏控制器 |
+| [User Guide](docs/user_guide.md) | Character editing, animation, previews, and exports |
+| [Project Format](docs/format.md) | Project data and export contracts |
+| [Build and Release](docs/build_and_release.md) | Windows builds, application icons, and distribution |
+| [Development Guide](docs/development.md) | Architecture, module boundaries, and verification |
 
-骨架和整体精灵图采用同一部件模型；不强制头、手或腿。动画影响外观，当前没有虚构的技能执行器。
-Ctrl+Z / Ctrl+Y / Ctrl+S 对应撤销、重做与保存。详细交互与阈值见使用说明。
+## Contributing
 
-## 尚未完成
+Use [GitHub Issues](https://github.com/LittleCxwx/RigPop/issues) to report bugs or discuss changes.
+Read [Agent.md](Agent.md) and the [development guide](docs/development.md) before contributing code.
 
-原型承接与完整产品规划尚未全部完成，以下范围没有被标记为已实现：
+## License
 
-- PSD 分层解析、图层映射、重导入与依赖打包；可暂用分层 PNG。
-- 配饰二级物理、骨链、IK、物理烘焙与 Live2D SDK。
-- 动画对比、参考图面板、图片序列批量导入、不等帧时长、时间轴重排、逐帧层级/枢轴编辑。
-- 战斗属性、技能/特效/弹体轨迹、多角色操控、追逐 AI；当前游戏试演只实现移动、碰撞与动作。
-- 创作应用内地图编辑、后台全局快捷键、整窗穿透、完整多屏与真实系统 DPI 适配。
-- 单文件桌宠、自动安装运行插件、旧格式迁移、打包归档导入与模块热加载。
+RigPop's original source code and documentation are licensed under the [MIT License](LICENSE).
+Third-party components and separately identified assets retain their own licenses;
+see [Third-Party Notices](THIRD_PARTY_NOTICES.md).
 
-当前地图在 `runtime/game/world.tscn` 中可用 Godot 编辑，不提供完整关卡编辑器。
-桌宠凸包以外区域穿透，凹洞并不逐像素穿透。更高工程版本会拒绝读取，不做破坏性降级。
-
-## 源码运行与构建
-
-锁定 **Godot 4.7.2 stable / Windows x86_64 / GL Compatibility**。构建者需提供对应 Godot 程序；
-导出模板只用于构建阶段，普通用户不需要它们。
-
-```powershell
-# 使用实际 Godot 路径替换 <Godot>。
-& '<Godot>' --path .
-& '<Godot>' --headless --path . --script tests/run_tests.gd
-
-# 首次构建：仅下载官方模板 ZIP 中的 Windows release 文件，校验 ZIP CRC。
-python tools/download_windows_template.py
-
-# 同步明文导出源码模板、导入资源、导出两个 exe。
-./tools/build.ps1 -Godot '<Godot>'
-
-# 生成干净便携压缩包，并在独立目录验证成品。
-./tools/package.ps1
-./tools/verify_package.ps1
-```
-
-`tools/download_windows_template.py` 只使用 Python 标准库和 HTTPS Range，不下载约 1.2 GB 的全平台归档。
-也可自行将匹配的 `windows_release_x86_64.exe` 放到 `build/templates/`。
-`export_presets.cfg` 已记录两个产品的预设，不依赖本机 Godot 模板安装目录。
-
-角色包导出的源码来自 `exporters/templates/` 中随应用发布的明文文件，构建时从当前运行源码同步。
-它不依赖从发布版的编译脚本还原源代码。改动运行组件后先同步模板或重新构建。
-
-## 目录与边界
-
-```text
-core/               角色模型、动作求值、手势与历史
-services/           工程事务存取与模板素材
-editor/             工作区布局、检查器、画布、像素工具、时间轴和编辑命令
-runtime/shared/     共用角色视图
-runtime/game/       地图、碰撞、输入与动作叠加
-runtime/desktop/    原生透明窗口、拖动、漫游与桌面输入
-exporters/          独立目录导出与明文运行模板
-assets/             完整中文字体与本地示例素材
-tests/              核心、UI、原生桌宠验证与截图
-tools/              模板下载、构建、源码同步与打包
-docs/               使用、格式、产品规划与验收记录
-```
-
-模型不引用 UI 或文件系统。工程服务负责 JSON/PNG，编辑器通过它们保存，运行视图只接收角色模型与贴图。
-游戏与桌宠适配互不引用。构建输出与用户导出是不同流程。
-
-## 验证
-
-已建立 RigPop 自身的自动检查，包含结构校验、层级循环、路径穿越、格式版本、保持采样、
-叠加轨道、存取回读、独立图片身份、撤销重做、整笔画/拖动、图集导入、独立帧、输入互斥、
-失焦、地图碰撞、导出回读和布局。当前主套件 **73 项通过**。
-
-实际 OpenGL 窗口截图覆盖 960×640、1280×800、1920×1080，另检查 125% / 150% 模拟 UI 缩放。
-真实桌宠场景验证原生窗口属性、菜单切换、拖动状态、焦点清理与透明帧缓冲。
-成品程序的 `-- --verify-install` 可验证发布目录中的存取与三种导出，并生成检查报告。
-
-详见 [验收记录](docs/validation.md)。未进行全新未安装 Godot 的物理机器、多显示器、真实系统 DPI
-切换与下层应用点击穿透的完整人工验收；不能据此声称生产版本或全部规划完成。
-
-## 开源许可证
-
-RigPop 的原创代码与文档采用 [MIT License](LICENSE)，版权署名为 `2026 LittleCxwx`。
-允许使用、修改、分发和商业使用；分发软件或其重要部分时，须保留版权声明和许可证全文。
-软件按现状提供，不提供担保。完整条款以 LICENSE 中的英文正文为准。
-
-第三方依赖、字体、图标和另有声明的素材遵循各自的许可，详见
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 与 `licenses/`。本项目的 MIT 许可不改变
-这些第三方内容或 `assets/slime.png` 示例素材原有的权利与许可。
-
-用户导入或创作的角色、图片与动画，其版权及许可由相应权利人决定，不会因使用 RigPop
-而自动采用 MIT；导出包中附带的 RigPop 运行代码和第三方组件仍须遵守各自的许可证。
+Artwork and characters created or imported by users retain their respective owners' rights.
