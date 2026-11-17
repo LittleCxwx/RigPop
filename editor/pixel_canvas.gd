@@ -76,7 +76,6 @@ func _gui_input(event: InputEvent) -> void:
 				if tool == "picker":
 					color_picked.emit(image.get_pixelv(pos))
 					return
-				stroke_started.emit()
 				drawing = true
 				changed = false
 				last = pos
@@ -84,10 +83,10 @@ func _gui_input(event: InputEvent) -> void:
 					flood(pos)
 				else:
 					paint(pos)
-				refresh()
+				if changed: refresh()
 			elif drawing:
 				drawing = false
-				stroke_finished.emit()
+				if changed: stroke_finished.emit()
 	if event is InputEventMouseMotion and panning:
 		pan += event.relative
 		queue_redraw()
@@ -98,7 +97,7 @@ func _gui_input(event: InputEvent) -> void:
 			for step in range(steps + 1):
 				paint(Vector2i(Vector2(last).lerp(Vector2(pos), float(step) / maxi(1, steps)).round()))
 			last = pos
-			refresh()
+			if changed: refresh()
 
 func inside(pos: Vector2i) -> bool:
 	return Rect2i(Vector2i.ZERO, image.get_size()).has_point(pos)
@@ -106,6 +105,7 @@ func inside(pos: Vector2i) -> bool:
 func paint(pos: Vector2i) -> void:
 	var ink := Color.TRANSPARENT if tool == "eraser" else color
 	if image.get_pixelv(pos) != ink:
+		if not changed: stroke_started.emit()
 		image.set_pixelv(pos, ink)
 		changed = true
 
@@ -113,6 +113,7 @@ func flood(pos: Vector2i) -> void:
 	var target := image.get_pixelv(pos)
 	if target.is_equal_approx(color):
 		return
+	stroke_started.emit()
 	var pending: Array[Vector2i] = [pos]
 	while not pending.is_empty():
 		var p: Vector2i = pending.pop_back()

@@ -47,6 +47,10 @@ jobs:
         run: |
           & $env:RIGPOP_GODOT --headless --path . --script tests/run_tests.gd
           if ($LASTEXITCODE -ne 0) { throw "Source tests failed." }
+          & $env:RIGPOP_GODOT --headless --path . --script tests/part_interaction_test.gd
+          if ($LASTEXITCODE -ne 0) { throw "Part interaction tests failed." }
+          & $env:RIGPOP_GODOT --headless --path . --script tests/pixel_frames_test.gd
+          if ($LASTEXITCODE -ne 0) { throw "Pixel frame tests failed." }
       - name: Package portable application
         run: ./tools/package.ps1
       - name: Test extracted application without source files

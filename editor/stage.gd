@@ -39,16 +39,23 @@ func origin() -> Vector2:
 
 func update_view(model: Dictionary, textures: Dictionary, action: String, frame: int) -> void:
 	var transforms := Character.transforms(model, {}, 0)
+	var clip := Character.find_action(model, action)
 	var first := true
 	for p in model.get("parts", []):
-		if not transforms.has(p.id) or not textures.has(p.asset): continue
-		var tex: Texture2D = textures[p.asset]
-		for point in [Vector2.ZERO, Vector2(tex.get_width(), 0), tex.get_size(), Vector2(0, tex.get_height())]:
-			var pos: Vector2 = transforms[p.id] * (point - Character.vec(p.pivot))
-			if first:
-				bounds = Rect2(pos, Vector2.ZERO)
-				first = false
-			else: bounds = bounds.expand(pos)
+		if not transforms.has(p.id): continue
+		# Include swapped artwork without changing the camera on every frame.
+		var assets := {str(p.asset): true}
+		for key in clip.get("tracks", {}).get(p.id, []):
+			if key.has("asset"): assets[str(key.asset)] = true
+		for asset in assets:
+			if not textures.has(asset): continue
+			var tex: Texture2D = textures[asset]
+			for point in [Vector2.ZERO, Vector2(tex.get_width(), 0), tex.get_size(), Vector2(0, tex.get_height())]:
+				var pos: Vector2 = transforms[p.id] * (point - Character.vec(p.pivot))
+				if first:
+					bounds = Rect2(pos, Vector2.ZERO)
+					first = false
+				else: bounds = bounds.expand(pos)
 	if auto_fit:
 		zoom = clampi(int(minf((size.x - 64) / maxf(1, bounds.size.x), (size.y - 64) / maxf(1, bounds.size.y))), 1, 8)
 	view.model = model
@@ -91,7 +98,9 @@ func _draw() -> void:
 	var transforms := Character.transforms(view.model, Character.find_action(view.model, view.action_id), view.frame)
 
 	for p in view.model.get("parts", []):
-		if not transforms.has(p.id):
+		var pose := Character.pose(Character.find_action(view.model, view.action_id), p.id, view.frame)
+		var asset := str(pose.get("asset", p.asset))
+		if not p.visible or not pose.get("visible", true) or not transforms.has(p.id):
 			continue
 		var t: Transform2D = transforms[p.id]
 		var pos: Vector2 = o + t.origin * zoom
@@ -102,8 +111,8 @@ func _draw() -> void:
 				draw_line(parent_pos, pos, Color(ThemeKit.CANVAS_ANCHOR, 0.5), 1.0, true)
 			draw_circle(pos, 2.5, Color(ThemeKit.CANVAS_ANCHOR, 0.9))
 
-		if p.id == selected and view.textures.has(p.asset):
-			var tex: Texture2D = view.textures[p.asset]
+		if p.id == selected and view.textures.has(asset):
+			var tex: Texture2D = view.textures[asset]
 			var corners := PackedVector2Array()
 			for point in [Vector2.ZERO, Vector2(tex.get_width(), 0), tex.get_size(), Vector2(0, tex.get_height()), Vector2.ZERO]:
 				corners.append(o + (t * (point - Character.vec(p.pivot))) * zoom)
@@ -153,10 +162,12 @@ func hit_test(pos: Vector2) -> String:
 	var parts: Array = view.model.get("parts", []).duplicate()
 	parts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.z) > int(b.z))
 	for p in parts:
-		if not p.visible or not transforms.has(p.id) or not view.textures.has(p.asset):
+		var pose := Character.pose(Character.find_action(view.model, view.action_id), p.id, view.frame)
+		var asset := str(pose.get("asset", p.asset))
+		if not p.visible or not pose.get("visible", true) or not transforms.has(p.id) or not view.textures.has(asset):
 			continue
 		var local: Vector2 = transforms[p.id].affine_inverse() * pos + Character.vec(p.pivot)
-		var img: Image = view.textures[p.asset].get_image()
+		var img: Image = view.textures[asset].get_image()
 		if Rect2(Vector2.ZERO, img.get_size()).has_point(local) and img.get_pixelv(Vector2i(local)).a > 0.1:
 			return p.id
 	return ""

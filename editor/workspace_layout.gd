@@ -171,7 +171,11 @@ func build_library(parent: Node) -> void:
 	app.tree.hide_root = true
 	app.tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	app.tree.item_selected.connect(func() -> void:
-		if not app.building and app.tree.get_selected() != null: app.select_part(str(app.tree.get_selected().get_metadata(0))))
+		if app.building: return
+		var item: TreeItem = app.tree.get_selected()
+		if item != null:
+			# Selection rebuilds the tree; wait until Godot finishes using the clicked item.
+			app.select_part.call_deferred(str(item.get_metadata(0))))
 	col.add_child(app.tree)
 
 	col.add_child(HSeparator.new())
@@ -244,7 +248,7 @@ func build_workspace(parent: Node) -> void:
 	app.pixel = PixelCanvas.new()
 	app.pixel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	app.stage_stack.add_child(app.pixel)
-	app.pixel.stroke_started.connect(app.begin_change)
+	app.pixel.stroke_started.connect(app.begin_pixel_stroke)
 	app.pixel.stroke_finished.connect(func() -> void: app.commit_change("像素笔画"); app.doc.refresh_textures(); app.update_canvas())
 	app.pixel.image_changed.connect(func() -> void: app.doc.refresh_textures(); app.stored_dirty = true)
 	app.pixel.color_picked.connect(func(c: Color) -> void: app.pixel.color = c; app.rebuild_inspector())

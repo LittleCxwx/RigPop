@@ -125,6 +125,20 @@ func pixel_inspector(p: Dictionary) -> void:
 	rule()
 	section("像素 · " + p.name)
 
+	var scope := HBoxContainer.new()
+	scope.add_theme_constant_override("separation", 4)
+	app.inspector.add_child(scope)
+	var group := ButtonGroup.new()
+	for i in 2:
+		var option: Button = app.button(scope, ["当前帧", "共用图片"][i], func() -> void:
+			app.pixel_frame_edit = i == 0
+			app.rebuild_inspector.call_deferred())
+		option.toggle_mode = true
+		option.button_group = group
+		option.button_pressed = app.pixel_frame_edit == (i == 0)
+		option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		option.tooltip_text = ["只修改当前帧的像素", "修改使用这张图片的所有帧"][i]
+
 	var tools := HBoxContainer.new()
 	tools.add_theme_constant_override("separation", 4)
 	app.inspector.add_child(tools)
@@ -142,6 +156,7 @@ func pixel_inspector(p: Dictionary) -> void:
 	picker.edit_alpha = true
 	picker.color_changed.connect(func(c: Color) -> void: app.pixel.color = c)
 	app.inspector.add_child(picker)
+	ThemeKit.style_color_picker(picker.get_picker())
 
 	section("色板")
 	var palette := HFlowContainer.new()
@@ -169,9 +184,14 @@ func pixel_inspector(p: Dictionary) -> void:
 	rule()
 	section("图片操作")
 	app.action_row(app.inspector, "当前帧独立换图", "copy", app.isolate_frame)
-	app.action_row(app.inspector, "裁去透明边缘", "fit", app.crop_image)
+	var previous: Button = app.action_row(app.inspector, "复制上一帧图片", "copy", app.copy_previous_frame)
+	previous.disabled = app.frame == 0
+	app.action_row(app.inspector, "新建空白帧", "new", app.blank_frame)
+	app.action_row(app.inspector, "导入当前帧图片", "image", app.choose_frame_replacement)
+	var crop: Button = app.action_row(app.inspector, "裁去透明边缘", "fit", app.crop_image)
+	crop.disabled = app.pixel_frame_edit or app.current_asset(p) != str(p.asset)
+	crop.tooltip_text = "基础图片裁边会同步枢轴；逐帧图片请使用画布调整"
 	app.action_row(app.inspector, "调整画布 / 重采样", "flip", app.resize_dialog)
-	app.action_row(app.inspector, "替换图片", "image", app.choose_replacement)
 
 	rule()
 	section("当前颜色")

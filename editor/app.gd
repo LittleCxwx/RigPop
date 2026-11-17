@@ -20,6 +20,7 @@ var clock := 0.0
 var playback_rate := 1.0
 var mode := 0
 var key_edit := false
+var pixel_frame_edit := true
 var before: Dictionary = {}
 var stored_dirty := true
 var data_root := ""
@@ -393,6 +394,16 @@ func _process(delta: float) -> void:
 func begin_change() -> void:
 	before = doc.snapshot()
 
+func begin_pixel_stroke() -> void:
+	playing = false
+	begin_change()
+	if not pixel_frame_edit: return
+	var asset := prepare_frame_image()
+	if not asset.is_empty() and pixel.image != doc.images[asset]:
+		var pan: Vector2 = pixel.pan
+		pixel.set_image(doc.images[asset])
+		pixel.pan = pan
+
 func commit_change(text: String) -> void:
 	if before.is_empty(): return
 	if hash(before) != hash(doc.snapshot()):
@@ -509,6 +520,7 @@ func file_selected(path: String) -> void:
 	if file_purpose == "open": guard(func() -> void: load_project(path))
 	elif file_purpose == "image": accept_image(path)
 	elif file_purpose == "replace": replace_image(path)
+	elif file_purpose == "frame_image": replace_image(path, true)
 
 func show_new() -> void:
 	var dialog := AcceptDialog.new()
@@ -827,7 +839,12 @@ func choose_replacement() -> void:
 	file_dialog.title = "替换当前部件图片"
 	file_dialog.popup_centered()
 
-func replace_image(path: String) -> void:
+func choose_frame_replacement() -> void:
+	choose_replacement()
+	file_purpose = "frame_image"
+	file_dialog.title = "替换第 %d 帧图片" % (frame + 1)
+
+func replace_image(path: String, frame_only: bool = false) -> void:
 	var img := Image.load_from_file(path)
 	if img == null or img.is_empty() or img.get_width() > 4096 or img.get_height() > 4096:
 		notify("图片无法读取或尺寸超过 4096 像素", true); return
@@ -836,35 +853,76 @@ func replace_image(path: String) -> void:
 	if p.is_empty(): return
 	edit("替换部件图片", func() -> void:
 		var asset := "assets/%s.png" % Character.uid("image")
-		doc.images[asset] = img
-		if key_edit:
-			var clip := Character.find_action(doc.model, action_id)
-			var pose := Character.pose(clip, selected, frame)
-			pose.asset = asset
-			Character.set_key(clip, selected, frame, pose)
+		if frame_only or key_edit:
+			asset = prepare_frame_image(false, true)
+			if asset.is_empty(): return
 		else: p.asset = asset
+		doc.images[asset] = img
 		doc.refresh_textures())
 	update_canvas()
 
-func isolate_frame() -> void:
+func prepare_frame_image(blank: bool = false, force_copy: bool = false) -> String:
 	var p := Character.find_part(doc.model, selected)
-	if p.is_empty(): return
+	var clip := Character.find_action(doc.model, action_id)
+	if p.is_empty() or clip.is_empty(): return ""
+	var source := current_asset(p)
+	if not doc.images.has(source): return ""
+	var pose := Character.pose(clip, selected, frame)
+	# Preserve the following exposure before changing a held image at this frame.
+	if frame + 1 < int(clip.frames):
+		var has_next := false
+		for key in clip.tracks.get(selected, []):
+			if int(key.frame) == frame + 1: has_next = true
+		if not has_next:
+			var next_pose := Character.pose(clip, selected, frame + 1)
+			next_pose.asset = str(next_pose.get("asset", p.asset))
+			Character.set_key(clip, selected, frame + 1, next_pose)
+	var shared := blank or force_copy
+	for part in doc.model.parts:
+		if part.asset == source: shared = true
+	for action in doc.model.actions:
+		for part_id in action.tracks:
+			for key in action.tracks[part_id]:
+				if key.get("asset", "") == source and (action.id != action_id or part_id != selected or int(key.frame) != frame):
+					shared = true
+	var asset := source
+	if shared:
+		asset = "assets/%s.png" % Character.uid("frame")
+		doc.images[asset] = doc.images[source].duplicate()
+		if blank: doc.images[asset].fill(Color.TRANSPARENT)
+	pose.asset = asset
+	Character.set_key(clip, selected, frame, pose)
+	return asset
+
+func isolate_frame() -> void:
 	edit("独立帧图片", func() -> void:
-		var asset := "assets/%s.png" % Character.uid("frame")
-		doc.images[asset] = doc.images[current_asset(p)].duplicate()
-		var clip := Character.find_action(doc.model, action_id)
-		var pose := Character.pose(clip, selected, frame)
-		pose.asset = asset
-		Character.set_key(clip, selected, frame, pose)
+		prepare_frame_image(false, true)
 		doc.refresh_textures())
 	notify("当前帧已使用独立图片")
+
+func blank_frame() -> void:
+	edit("新建空白帧", func() -> void:
+		prepare_frame_image(true)
+		doc.refresh_textures())
+
+func copy_previous_frame() -> void:
+	var p := Character.find_part(doc.model, selected)
+	var clip := Character.find_action(doc.model, action_id)
+	if frame <= 0 or p.is_empty() or clip.is_empty(): return
+	var previous := str(Character.pose(clip, selected, frame - 1).get("asset", p.asset))
+	if not doc.images.has(previous): return
+	edit("复制上一帧图片", func() -> void:
+		var asset := prepare_frame_image(false, true)
+		if asset.is_empty(): return
+		doc.images[asset] = doc.images[previous].duplicate()
+		doc.refresh_textures())
 
 func crop_image() -> void:
 	var p := Character.find_part(doc.model, selected)
 	if p.is_empty(): return
 	var asset := current_asset(p)
-	if asset != p.asset:
-		notify("姿势换图请先调整画布；透明裁边当前仅用于绑定图片", true); return
+	if (mode == 1 and pixel_frame_edit) or asset != p.asset:
+		notify("逐帧图片请使用画布调整；基础图片裁边请切换到共用图片", true); return
 	var img: Image = doc.images[asset]
 	var used := img.get_used_rect()
 	if used.size == Vector2i.ZERO: notify("图片完全透明，无可裁内容"); return
@@ -878,6 +936,7 @@ func resize_dialog() -> void:
 	var p := Character.find_part(doc.model, selected)
 	if p.is_empty(): return
 	var asset := current_asset(p)
+	var frame_only := mode == 1 and pixel_frame_edit
 	var img: Image = doc.images[asset]
 	var dialog := ConfirmationDialog.new()
 	dialog.title = "画布与最近邻重采样"
@@ -891,13 +950,15 @@ func resize_dialog() -> void:
 			var next := img.duplicate() as Image
 			if resample.button_pressed:
 				next.resize(int(w.value), int(h.value), Image.INTERPOLATE_NEAREST)
-				if asset == p.asset:
+				if not frame_only and asset == p.asset:
 					p.pivot = [float(p.pivot[0]) * w.value / img.get_width(), float(p.pivot[1]) * h.value / img.get_height()]
 			else:
 				next = Image.create(int(w.value), int(h.value), false, Image.FORMAT_RGBA8)
 				next.fill(Color.TRANSPARENT)
 				next.blit_rect(img, Rect2i(Vector2i.ZERO, img.get_size()), Vector2i.ZERO)
-			doc.images[asset] = next
+			var target := prepare_frame_image(false, true) if frame_only else asset
+			if target.is_empty(): return
+			doc.images[target] = next
 			doc.refresh_textures())
 		dialog.queue_free())
 	dialog.canceled.connect(dialog.queue_free)

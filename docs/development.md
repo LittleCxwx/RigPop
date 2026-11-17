@@ -84,6 +84,12 @@ $godot = 'C:\Tools\Godot\Godot_v4.7.2-stable_win64_console.exe'
 # 核心、编辑与导出回归。
 & $godot --headless --path . --script tests/run_tests.gd
 
+# 通过实际鼠标事件检查部件选择、添加与撤销重做。
+& $godot --headless --path . --script tests/part_interaction_test.gd
+
+# 逐帧绘制、整图换帧、存取导出及颜色弹窗对比度。
+& $godot --headless --path . --script tests/pixel_frames_test.gd
+
 # 在实际窗口运行同一套件，并生成截图。
 & $godot --path . --script tests/run_tests.gd
 

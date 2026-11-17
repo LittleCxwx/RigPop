@@ -183,6 +183,12 @@ static func make() -> Theme:
 		t.set_constant("minimum_grab_thickness", type, 16)
 
 	# --- 弹层 -----------------------------------------------------------
+	t.set_stylebox("panel", "PopupPanel", flat(SURFACE, 4, LINE_2, 8, 8))
+	# ColorPicker uses TabContainer styles for its RGB / HSV mode buttons.
+	t.set_stylebox("tab_unselected", "TabContainer", flat(PAPER_2, 3, Color.TRANSPARENT, 10, 5))
+	t.set_stylebox("tab_selected", "TabContainer", flat(SELECT, 3, LINE_2, 10, 5))
+	t.set_stylebox("tab_hovered", "TabContainer", flat(PAPER_2, 3, LINE_2, 10, 5))
+	t.set_stylebox("tab_disabled", "TabContainer", flat(PAPER, 3, Color.TRANSPARENT, 10, 5))
 	t.set_stylebox("panel", "PopupMenu", flat(SURFACE, 4, LINE_2, 5, 5))
 	t.set_stylebox("hover", "PopupMenu", flat(SELECT, 3, Color.TRANSPARENT, 6, 4))
 	t.set_color("font_color", "PopupMenu", INK_2)
@@ -222,3 +228,10 @@ static func make() -> Theme:
 
 static func make_separator() -> StyleBoxFlat:
 	return flat(LINE)
+
+static func style_color_picker(node: Node) -> void:
+	if node is Button:
+		for state in ["normal", "hover", "pressed", "focus", "hover_pressed"]:
+			node.add_theme_color_override("icon_" + state + "_color", INK_2)
+		node.add_theme_color_override("icon_disabled_color", FAINT)
+	for child in node.get_children(true): style_color_picker(child)
