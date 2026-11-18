@@ -49,7 +49,8 @@ static func export_package(doc: RefCounted, directory: String, target: String) -
 				return {"error": "缺少预构建桌宠宿主 " + filename + "。请先执行 tools/build.ps1。工程仍完整保留。", "path": staging}
 			if DirAccess.copy_absolute(host_root.path_join(filename), staging.path_join(filename)) != OK:
 				return {"error": "桌宠宿主复制失败", "path": staging}
-	var manifest := {"package_format_version": 1, "runtime_api_version": 1, "application_version": "0.1.0", "godot_version": "4.7.2", "id": doc.model.id,
+	var application_version := str(ProjectSettings.get_setting("application/config/version"))
+	var manifest := {"package_format_version": 1, "runtime_api_version": 1, "application_version": application_version, "godot_version": "4.7.2", "id": doc.model.id,
 		"name": doc.model.name, "target": target, "character": character_relative, "actions": doc.model.actions,
 		"entry_scene": data_relative + "/character.tscn" if target == "Godot" else "", "entry_executable": "RigPopPet.exe" if target == "桌宠" else "",
 		"commands": ["move_left", "move_right", "move_up", "move_down"],
@@ -58,7 +59,7 @@ static func export_package(doc: RefCounted, directory: String, target: String) -
 		"required_modules": ["rigpop.shared.v1"], "runtime_sources": SOURCE_FILES if target == "Godot" else []}
 	error = write(staging.path_join("manifest.json"), JSON.stringify(manifest, "\t"))
 	if not error.is_empty(): return {"error": error, "path": staging}
-	var readme := "# " + str(doc.model.name) + "\n\nRigPop 0.1.0 / runtime API 1 / Godot 4.7.2\n\n"
+	var readme := "# " + str(doc.model.name) + "\n\nRigPop %s / runtime API 1 / Godot 4.7.2\n\n" % application_version
 	if target == "Godot":
 		readme += "打开 project.godot 运行试演。manifest.json 的 entry_scene 是可实例化入口。\n\n合入现有项目时，只需复制 addons/rigpop_runtime/ 与 characters/ 至目标根目录，保持相对结构。共用运行目录只安装一次；重复导入前检查 manifest 中的 API 版本。将 characters/<角色ID>/character.tscn 拖入地图，地图摆放与角色创作数据独立。根目录 preview.* 与 project.godot 只供独立演示，不需要复制或覆盖用户场景。\n\n运行节点提供 configure(model, textures)、load_character(path)、execute(action_id)、clear_input()。移动由键鼠绑定执行，叠加动作只覆盖其定义的部件轨道。可用动作见 manifest.json。\n"
 	elif target == "桌宠":

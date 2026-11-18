@@ -34,15 +34,20 @@ jobs:
           Invoke-WebRequest "https://github.com/godotengine/godot-builds/releases/download/$env:GODOT_VERSION-stable/$archiveName" -OutFile $archive
           Expand-Archive -LiteralPath $archive -DestinationPath $engineRoot
           "RIGPOP_GODOT=$(Join-Path $engineRoot "Godot_v$env:GODOT_VERSION-stable_win64_console.exe")" >> $env:GITHUB_ENV
+      - name: Verify release tag matches application version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          & $env:RIGPOP_GODOT --headless --path . --script tools/check_release_version.gd -- --tag $env:GITHUB_REF_NAME
+          if ($LASTEXITCODE -ne 0) { throw "Release version check failed. See the expected tag and source version above." }
       - name: Download matching Windows templates
         run: python tools/download_windows_template.py
       - name: Build editor and desktop host
         run: ./tools/build.ps1 -Godot $env:RIGPOP_GODOT
-      - name: Verify release tag matches application version
+      - name: Verify built application version
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           $info = Get-Content build/build_info.json -Raw | ConvertFrom-Json
-          if ($env:GITHUB_REF_NAME -ne "v$($info.version)") { throw "Tag must match project.godot config/version." }
+          if ($env:GITHUB_REF_NAME -cne "v$($info.version)") { throw "Built version '$($info.version)' does not match release tag '$env:GITHUB_REF_NAME'." }
       - name: Test source
         run: |
           & $env:RIGPOP_GODOT --headless --path . --script tests/run_tests.gd
@@ -72,5 +77,10 @@ jobs:
         run: |
           $info = Get-Content build/build_info.json -Raw | ConvertFrom-Json
           $archive = "build/RigPop-$($info.version)-win64.zip"
-          gh release create $env:GITHUB_REF_NAME $archive build/SHA256SUMS.txt --verify-tag --title "RigPop $($info.version) Demo" --prerelease --notes-file docs/release_notes.md
+          gh release view $env:GITHUB_REF_NAME --json id --jq .id
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:GITHUB_REF_NAME $archive build/SHA256SUMS.txt --clobber
+          } else {
+            gh release create $env:GITHUB_REF_NAME $archive build/SHA256SUMS.txt --verify-tag --title "RigPop $($info.version) Demo" --prerelease --notes-file docs/release_notes.md
+          }
           if ($LASTEXITCODE -ne 0) { throw "GitHub Release publishing failed." }

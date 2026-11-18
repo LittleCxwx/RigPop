@@ -40,7 +40,7 @@ python ./tools/download_windows_template.py
 ```
 
 当前产物为 `build/RigPop.exe`、`build/RigPop.pck`、`build/hosts/`、
-`build/RigPop-0.1.0-win64.zip` 和 `build/SHA256SUMS.txt`。
+`build/RigPop-0.1.1-win64.zip` 和 `build/SHA256SUMS.txt`。
 ZIP 文件名从构建时读取的 `project.godot` 应用版本生成，不需要手动改打包脚本。
 重新打包使用独立暂存目录和明确的文件清单，不会把旧发布目录中的用户作品带进去。
 
@@ -75,13 +75,18 @@ Windows 导出会将图标写入 EXE，Godot 窗口也使用相应设置。无�
 
 ```powershell
 git push origin main
-git tag -a v0.1.0 -m 'RigPop 0.1.0 Demo'
-git push origin v0.1.0
+git tag -a v0.1.1 -m 'RigPop 0.1.1 Demo'
+git push origin v0.1.1
 ```
 
-标签示例仅在 `v0.1.0` 尚未存在时使用。后续版本使用新的版本号，不覆盖旧标签或已发布资源。
+标签示例仅在 `v0.1.1` 尚未存在时使用。后续版本使用新的版本号，不覆盖旧标签或已发布资源。
+程序底栏、导出清单和导出说明统一读取 `project.godot` 的 `config/version`。
+标签构建会在下载导出模板之前校验版本，构建后再次核对生成的版本信息。
+本机可先执行 `& $godot --headless --path . --script tools/check_release_version.gd -- --tag v0.1.1`。
+版本不一致时不要只重新运行旧标签；旧标签仍指向旧提交。应提交修正后使用新的版本标签。
 工作流在 Windows 上下载锁定版本的 Godot 和模板、构建、执行源码检查、打包、验证成品，
 通过后建立标为预览版的 GitHub Release，并附上 ZIP 和 SHA-256 文件。
+同名 Release 已存在时只替换 ZIP 与校验附件，保留其标题、notes 和发布状态。
 使用仓库自动提供的 `GITHUB_TOKEN`，不需要在源码中写入私人令牌。
 
 也可手动在 Releases 中创建版本，把已验证的 ZIP 与 `SHA256SUMS.txt` 拖入 Assets 后发布。

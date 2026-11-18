@@ -393,7 +393,7 @@ func build_footer(root: VBoxContainer) -> void:
 	app.status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	app.status.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(app.status)
-	var version = app.label("v0.1.0  ·  Godot 4.7.2  ·  便携模式", 11, ThemeKit.MUTED)
+	var version = app.label("v%s  ·  Godot 4.7.2  ·  便携模式" % ProjectSettings.get_setting("application/config/version"), 11, ThemeKit.MUTED)
 	version.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(version)
 

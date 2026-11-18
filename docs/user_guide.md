@@ -1,4 +1,4 @@
-# RigPop 0.1.0 使用说明
+# RigPop 0.1.1 使用说明
 
 双击 `RigPop.exe` 进入角色工作区。请保留同目录 `RigPop.pck`、`hosts/` 与 `licenses/`。
 无需安装 Godot 或 Python。最低工作区尺寸为 960×640，推荐 1280×800 或更大。

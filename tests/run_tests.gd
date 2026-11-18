@@ -107,6 +107,10 @@ func _run() -> void:
 	expect(router.advance(3.4) == ["tap"], "single tap after window")
 	var bundle := Exporter.export_package(doc, output, "Godot")
 	expect(bundle.error.is_empty(), "Godot package exported and read back")
+	var export_manifest = JSON.parse_string(FileAccess.get_file_as_string(str(bundle.path).path_join("manifest.json")))
+	var application_version := str(ProjectSettings.get_setting("application/config/version"))
+	expect(export_manifest is Dictionary and export_manifest.get("application_version", "") == application_version, "export manifest uses configured application version")
+	expect(FileAccess.get_file_as_string(str(bundle.path).path_join("README.md")).contains("RigPop " + application_version + " /"), "export readme uses configured application version")
 	report.godot_package = bundle.path
 	expect(FileAccess.file_exists(str(bundle.path).path_join("characters/%s/character.tscn" % doc.model.id)), "instantiable character scene exported")
 	var portable := Exporter.export_package(doc, output, "工程")
