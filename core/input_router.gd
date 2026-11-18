@@ -7,6 +7,32 @@ var long_fired := {}
 var hold_threshold := 0.3
 var double_threshold := 0.25
 
+static func key_from_event(event: InputEvent) -> String:
+	if event is InputEventKey and not event.echo:
+		var code: Key = event.keycode if event.keycode != KEY_NONE else event.physical_keycode
+		return OS.get_keycode_string(code) if code != KEY_NONE else ""
+	if event is InputEventMouseButton:
+		match event.button_index:
+			MOUSE_BUTTON_LEFT: return "MouseLeft"
+			MOUSE_BUTTON_RIGHT: return "MouseRight"
+			MOUSE_BUTTON_MIDDLE: return "MouseMiddle"
+	return ""
+
+static func binding_error(bindings: Array) -> String:
+	var seen := {}
+	for b in bindings:
+		var key := str(b.get("key", ""))
+		var gesture := str(b.get("gesture", ""))
+		var command := str(b.get("command", ""))
+		if key.is_empty() or (key not in ["MouseLeft", "MouseRight", "MouseMiddle"] and OS.find_keycode_from_string(key) == KEY_NONE):
+			return "请选择有效按键"
+		if gesture not in ["hold", "tap", "long", "double"]: return "请选择触发方式"
+		if seen.has(key + "/" + gesture): return "同一按键与触发方式只能绑定一次"
+		if command.begins_with("move_") != (gesture == "hold"):
+			return "移动使用持续触发；动作使用点按、长按或双击"
+		seen[key + "/" + gesture] = true
+	return ""
+
 func clear() -> void:
 	held.clear()
 	pending.clear()

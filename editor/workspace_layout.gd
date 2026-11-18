@@ -164,6 +164,7 @@ func build_library(parent: Node) -> void:
 	app.heading(header, "部件")
 	app.expand(header)
 	small_tool(header, "new", "添加空白部件", app.add_part)
+	small_tool(header, "bone", "添加关节", app.add_joint)
 	small_tool(header, "trash", "删除选中部件（可撤销）", app.delete_part)
 
 	app.tree = Tree.new()
@@ -373,6 +374,7 @@ func build_timeline(parent: Node) -> void:
 	app.timeline.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	app.timeline.frame_selected.connect(app.seek)
 	app.timeline.track_selected.connect(app.select_part)
+	app.timeline.key_moved.connect(app.move_key)
 	app.timeline_scroll.add_child(app.timeline)
 
 func build_footer(root: VBoxContainer) -> void:

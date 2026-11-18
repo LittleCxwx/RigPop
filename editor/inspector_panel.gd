@@ -31,14 +31,15 @@ func render() -> void:
 		section("尚无部件")
 		app.action_row(app.inspector, "添加部件", "new", app.add_part)
 		return
-	if app.mode == 1:
+	if app.mode == 1 and p.get("kind", "part") != "joint":
 		pixel_inspector(p)
 		return
 	part_inspector(p)
 
 func part_inspector(p: Dictionary) -> void:
 	rule()
-	section("部件 · " + p.name)
+	var joint: bool = p.get("kind", "part") == "joint"
+	section(("关节 · " if joint else "部件 · ") + p.name)
 	app.name_field(app.inspector, p.name, func(text: String) -> void:
 		app.edit("重命名部件", func() -> void: p.name = text)
 		app.rebuild_tree())
@@ -51,23 +52,22 @@ func part_inspector(p: Dictionary) -> void:
 	caption.custom_minimum_size.x = 0
 	row.add_child(caption)
 	var parent_picker := OptionButton.new()
-	parent_picker.custom_minimum_size = Vector2(120, 26)
+	parent_picker.custom_minimum_size = Vector2(136, 26)
+	parent_picker.fit_to_longest_item = false
 	parent_picker.add_item("无父节点")
 	parent_picker.set_item_metadata(0, "")
 	for candidate in app.doc.model.parts:
 		if candidate.id == app.selected: continue
-		parent_picker.add_item(candidate.name)
+		parent_picker.add_item(("关节 · " if candidate.get("kind", "part") == "joint" else "") + candidate.name)
 		parent_picker.set_item_metadata(parent_picker.item_count - 1, candidate.id)
 		if candidate.id == p.parent: parent_picker.select(parent_picker.item_count - 1)
 	parent_picker.item_selected.connect(func(i: int) -> void:
-		var old: String = p.parent
 		app.begin_change()
-		p.parent = parent_picker.get_item_metadata(i)
-		if not Character.validate(app.doc.model).is_empty():
-			p.parent = old
+		if not Character.reparent(app.doc.model, p.id, str(parent_picker.get_item_metadata(i))):
 			app.notify("无法挂接到自己的子节点", true)
 		app.commit_change("修改父节点")
-		app.rebuild_tree())
+		app.rebuild_tree()
+		app.rebuild_inspector.call_deferred())
 	row.add_child(parent_picker)
 
 	section("变换" if not app.key_edit else "关键帧变换")
@@ -90,16 +90,19 @@ func part_inspector(p: Dictionary) -> void:
 				Character.set_key(clip, p.id, app.frame, updated)
 			else: p.rotation = v))
 	for axis in 2:
+		if joint: break
 		app.number_field(app.inspector, ["枢轴 X / px", "枢轴 Y / px"][axis], float(p.pivot[axis]), -1024, 1024, 1, func(v: float) -> void:
 			app.edit("修改枢轴", func() -> void: p.pivot[axis] = v))
-	app.number_field(app.inspector, "绘制层级", float(p.z), -100, 100, 1, func(v: float) -> void:
-		app.edit("修改层级", func() -> void: p.z = int(v)))
+	if not joint:
+		app.number_field(app.inspector, "绘制层级", float(p.z), -100, 100, 1, func(v: float) -> void:
+			app.edit("修改层级", func() -> void: p.z = int(v)))
 	app.check_field(app.inspector, "部件可见", bool(p.visible), func(v: bool) -> void:
 		app.edit("切换可见性", func() -> void: p.visible = v)
 		app.rebuild_tree())
 
 	app.gap(app.inspector, 4)
-	app.action_row(app.inspector, "替换部件图片", "image", app.choose_replacement)
+	if joint: app.action_row(app.inspector, "添加子关节", "bone", app.add_joint)
+	else: app.action_row(app.inspector, "替换部件图片", "image", app.choose_replacement)
 	if app.key_edit:
 		app.action_row(app.inspector, "删除当前关键帧", "trash", app.remove_key)
 
@@ -120,6 +123,19 @@ func part_inspector(p: Dictionary) -> void:
 				app.frame = mini(app.frame, int(v) - 1)))
 		app.check_field(app.inspector, "循环播放", bool(clip.loop), func(v: bool) -> void: app.edit("修改循环", func() -> void: clip.loop = v))
 		app.check_field(app.inspector, "叠加动作（仅含轨道）", bool(clip.overlay), func(v: bool) -> void: app.edit("修改动作类型", func() -> void: clip.overlay = v))
+		app.number_field(app.inspector, "动作优先级", float(clip.get("priority", 0)), -100, 100, 1, func(v: float) -> void:
+			app.edit("修改动作优先级", func() -> void: clip.priority = int(v)))
+		var conflict := OptionButton.new()
+		conflict.add_item("冲突时替换低 / 同优先级动作")
+		conflict.add_item("冲突时放弃本次动作")
+		conflict.fit_to_longest_item = false
+		conflict.custom_minimum_size.y = 28
+		conflict.select(1 if clip.get("conflict", "replace") == "reject" else 0)
+		conflict.item_selected.connect(func(i: int) -> void:
+			app.edit("修改动作冲突规则", func() -> void: clip.conflict = ["replace", "reject"][i]))
+		app.inspector.add_child(conflict)
+		app.check_field(app.inspector, "播放时禁止移动", bool(clip.get("lock_movement", false)), func(v: bool) -> void:
+			app.edit("修改动作移动限制", func() -> void: clip.lock_movement = v))
 
 func pixel_inspector(p: Dictionary) -> void:
 	rule()
@@ -238,8 +254,9 @@ func desktop_inspector() -> void:
 	app.check_field(app.inspector, "自由漫游", bool(app.doc.model.desktop.wander), func(v: bool) -> void:
 		app.edit("修改漫游", func() -> void: app.doc.model.desktop.wander = v))
 	app.gap(app.inspector, 4)
-	app.action_row(app.inspector, "启动独立桌宠", "play", app.launch_desktop)
-	app.action_row(app.inspector, "停止试演", "pause", app.stop_desktop)
+	app.desktop_start_button = app.action_row(app.inspector, "启动独立桌宠", "play", app.launch_desktop)
+	app.desktop_stop_button = app.action_row(app.inspector, "停止试演", "pause", app.stop_desktop)
+	app.update_desktop_buttons()
 	app.action_row(app.inspector, "控制绑定", "keys", app.show_controls)
 
 	rule()

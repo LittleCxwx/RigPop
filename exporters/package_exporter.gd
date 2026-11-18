@@ -2,7 +2,7 @@ extends RefCounted
 
 const Character = preload("res://core/character.gd")
 const Store = preload("res://services/project_store.gd")
-const SOURCE_FILES := ["core/character.gd", "core/input_router.gd", "services/project_store.gd", "runtime/shared/character_view.gd", "runtime/game/controller.gd", "runtime/game/character.tscn", "runtime/game/world.gd", "runtime/game/world.tscn"]
+const SOURCE_FILES := ["core/character.gd", "core/input_router.gd", "core/action_player.gd", "services/project_store.gd", "runtime/shared/character_view.gd", "runtime/game/controller.gd", "runtime/game/character.tscn", "runtime/game/world.gd", "runtime/game/world.tscn"]
 
 static func write(path: String, text: String) -> String:
 	if DirAccess.make_dir_recursive_absolute(path.get_base_dir()) != OK: return "无法创建导出目录"
@@ -62,7 +62,7 @@ static func export_package(doc: RefCounted, directory: String, target: String) -
 	if target == "Godot":
 		readme += "打开 project.godot 运行试演。manifest.json 的 entry_scene 是可实例化入口。\n\n合入现有项目时，只需复制 addons/rigpop_runtime/ 与 characters/ 至目标根目录，保持相对结构。共用运行目录只安装一次；重复导入前检查 manifest 中的 API 版本。将 characters/<角色ID>/character.tscn 拖入地图，地图摆放与角色创作数据独立。根目录 preview.* 与 project.godot 只供独立演示，不需要复制或覆盖用户场景。\n\n运行节点提供 configure(model, textures)、load_character(path)、execute(action_id)、clear_input()。移动由键鼠绑定执行，叠加动作只覆盖其定义的部件轨道。可用动作见 manifest.json。\n"
 	elif target == "桌宠":
-		readme += "双击 RigPopPet.exe，需保留同目录 RigPopPet.pck 与 character/。左键拖动，右键菜单提供漫游、置顶与退出；窗口获得焦点时 Escape 退出。透明区域按角色轮廓的凸包穿透；不提供整窗穿透与全局热键。\n"
+		readme += "双击 RigPopPet.exe，需保留同目录 RigPopPet.pck 与 character/。左键拖动移动；右键点按松开打开漫游、置顶与退出菜单，右键向上拖动放大、向下拖动缩小（1～8 倍整数像素）。桌宠右键不触发动作绑定，游戏中仍可使用右键绑定。窗口获得焦点时 Escape 退出。透明区域按角色轮廓的凸包穿透；不提供整窗穿透与全局热键。\n"
 	else:
 		readme += "在 RigPop 中打开 character/character.rigpop.json。PNG 与 JSON 必须一同搬移。\n"
 	error = write(staging.path_join("README.md"), readme)

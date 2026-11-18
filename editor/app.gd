@@ -25,6 +25,9 @@ var before: Dictionary = {}
 var stored_dirty := true
 var data_root := ""
 var desktop_pid := -1
+var desktop_start_button: Button
+var desktop_stop_button: Button
+var bindings_dialog: Control
 var tree: Tree
 var inspector: VBoxContainer
 var inspector_panel: RefCounted
@@ -281,6 +284,7 @@ func rebuild_tree() -> void:
 			if not items.has(p.parent): continue
 			var item := tree.create_item(items[p.parent])
 			item.set_text(0, p.name)
+			if p.get("kind", "part") == "joint": item.set_icon(0, Icons.get_icon("bone", 14))
 			item.set_metadata(0, p.id)
 			item.set_custom_color(0, ThemeKit.INK if p.visible else ThemeKit.MUTED)
 			items[p.id] = item
@@ -363,6 +367,7 @@ func current_asset(p: Dictionary) -> String:
 	return str(Character.pose(Character.find_action(doc.model, action_id), p.id, frame).get("asset", p.asset))
 
 func seek(value: int) -> void:
+	if frame == value and not playing and stage.view.action_id == action_id: return
 	playing = false
 	frame = value
 	clock = float(frame) / maxf(1, float(Character.find_action(doc.model, action_id).get("fps", 8)))
@@ -376,6 +381,9 @@ func toggle_play() -> void:
 
 func _process(delta: float) -> void:
 	if doc == null: return
+	if desktop_pid > 0 and not OS.is_process_running(desktop_pid):
+		desktop_pid = -1
+		update_desktop_buttons()
 	if playing:
 		var clip := Character.find_action(doc.model, action_id)
 		if not clip.is_empty():
@@ -389,7 +397,7 @@ func _process(delta: float) -> void:
 				frame = next
 				update_canvas()
 	if game_world != null:
-		game_world.enabled = mode == 2 and game_container.has_focus()
+		game_world.enabled = mode == 2 and game_container.has_focus() and not is_instance_valid(bindings_dialog)
 
 func begin_change() -> void:
 	before = doc.snapshot()
@@ -442,6 +450,11 @@ func redo() -> void:
 
 func drag_part(id: String, offset: Vector2) -> void:
 	var p := Character.find_part(doc.model, id)
+	if p.is_empty(): return
+	var transforms := Character.transforms(doc.model, Character.find_action(doc.model, action_id), frame)
+	if transforms.has(p.parent):
+		var parent: Transform2D = transforms[p.parent]
+		offset = parent.basis_xform_inv(offset)
 	if key_edit:
 		var clip := Character.find_action(doc.model, action_id)
 		var pose := Character.pose(clip, id, frame)
@@ -457,6 +470,26 @@ func insert_key() -> void:
 	if clip.is_empty(): return
 	edit("插入关键帧", func() -> void: Character.set_key(clip, selected, frame, Character.pose(clip, selected, frame)))
 	notify("已在第 %d 帧插入关键帧" % (frame + 1))
+
+func move_key(id: String, source: int, destination: int) -> void:
+	var clip := Character.find_action(doc.model, action_id)
+	if clip.is_empty() or source == destination or destination < 0 or destination >= int(clip.frames): return
+	var keys: Array = clip.get("tracks", {}).get(id, [])
+	var original := {}
+	var occupied := {}
+	for key in keys:
+		if int(key.frame) == source: original = key.duplicate(true)
+		if int(key.frame) == destination: occupied = key.duplicate(true)
+	if original.is_empty(): return
+	edit("移动关键帧", func() -> void:
+		for i in range(keys.size() - 1, -1, -1):
+			if int(keys[i].frame) in [source, destination]: keys.remove_at(i)
+		Character.set_key(clip, id, destination, original)
+		if not occupied.is_empty(): Character.set_key(clip, id, source, occupied))
+	frame = destination
+	selected = id
+	playing = false
+	refresh_all()
 
 func set_zoom(amount: int) -> void:
 	if mode == 1: pixel.zoom = clampi(pixel.zoom + amount, 1, 32); pixel.queue_redraw()
@@ -576,10 +609,22 @@ func delete_part() -> void:
 	if p.is_empty(): return
 	edit("删除部件", func() -> void:
 		for child in doc.model.parts:
-			if child.parent == selected: child.parent = p.parent
+			if child.parent == selected: Character.reparent(doc.model, child.id, p.parent)
 		doc.model.parts.erase(p)
 		for clip in doc.model.actions: clip.tracks.erase(selected))
 	refresh_all()
+
+func add_joint() -> void:
+	var id := Character.uid("joint")
+	edit("添加关节", func() -> void:
+		var p := Character.joint(id, "新关节", selected, [0, -8] if not selected.is_empty() else [0, 0])
+		doc.model.parts.append(p)
+		var img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+		img.fill(Color.TRANSPARENT)
+		doc.images[p.asset] = img
+		doc.refresh_textures())
+	stage.bones = true
+	select_part(id)
 
 func add_action() -> void:
 	var clip := Character.action(Character.uid("action"), "新动作")
@@ -705,7 +750,11 @@ func directory_selected(directory: String) -> void:
 	else: notify("导出完成  ·  " + result.path)
 
 func launch_desktop() -> void:
-	var temporary := data_root.path_join("preview")
+	if desktop_pid > 0 and OS.is_process_running(desktop_pid):
+		update_desktop_buttons()
+		notify("桌宠试演正在运行")
+		return
+	var temporary := data_root.path_join("preview").path_join(str(doc.model.id))
 	var original_path: String = doc.path
 	var original_fingerprint: String = doc.saved_fingerprint
 	var error: String = doc.save_to(temporary)
@@ -721,18 +770,26 @@ func launch_desktop() -> void:
 		args.append_array(["--path", ProjectSettings.globalize_path("res://"), "res://runtime/desktop/pet.tscn"])
 	args.append_array(["--", "--character", temporary.path_join("character.rigpop.json")])
 	desktop_pid = OS.create_process(engine, args)
+	update_desktop_buttons()
 	notify("桌宠试演已启动" if desktop_pid > 0 else "桌宠进程启动失败", desktop_pid <= 0)
 
 func stop_desktop() -> void:
 	if desktop_pid > 0 and OS.is_process_running(desktop_pid): OS.kill(desktop_pid)
 	desktop_pid = -1
+	update_desktop_buttons()
 	notify("桌宠试演已停止")
+
+func update_desktop_buttons() -> void:
+	var running := desktop_pid > 0 and OS.is_process_running(desktop_pid)
+	if is_instance_valid(desktop_start_button): desktop_start_button.disabled = running
+	if is_instance_valid(desktop_stop_button): desktop_stop_button.disabled = not running
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST and doc != null:
 		guard(func() -> void: stop_desktop(); get_tree().quit())
 
 func _shortcut_input(event: InputEvent) -> void:
+	if is_instance_valid(bindings_dialog): return
 	if event is InputEventKey and event.pressed and not event.echo and event.ctrl_pressed:
 		match event.keycode:
 			KEY_S:
@@ -966,72 +1023,11 @@ func resize_dialog() -> void:
 	dialog.popup_centered(Vector2i(350, 180))
 
 func show_controls() -> void:
-	var dialog := ConfirmationDialog.new()
-	dialog.title = "键鼠与手势绑定"
-	dialog.ok_button_text = "应用绑定"
-	var col := VBoxContainer.new()
-	dialog.add_child(col)
-	var rows := VBoxContainer.new()
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(550, 290)
-	scroll.add_child(rows)
-	col.add_child(scroll)
-	var bindings: Array = doc.model.bindings.duplicate(true)
-	var commands := ["move_left", "move_right", "move_up", "move_down"]
-	for clip in doc.model.actions: commands.append(clip.id)
-	var render := func() -> void:
-		for child in rows.get_children():
-			rows.remove_child(child); child.queue_free()
-		for b in bindings:
-			if b.get("removed", false): continue
-			var row := HBoxContainer.new()
-			rows.add_child(row)
-			var key := LineEdit.new()
-			key.text = b.key
-			key.custom_minimum_size.x = 100
-			key.tooltip_text = "Godot 键名，或 MouseLeft / MouseRight"
-			key.text_changed.connect(func(text: String) -> void: b.key = text.strip_edges())
-			row.add_child(key)
-			var gesture := OptionButton.new()
-			for title in ["持续移动", "点按", "长按", "双击"]: gesture.add_item(title)
-			gesture.select(["hold", "tap", "long", "double"].find(b.gesture))
-			gesture.item_selected.connect(func(i: int) -> void: b.gesture = ["hold", "tap", "long", "double"][i])
-			row.add_child(gesture)
-			var command := OptionButton.new()
-			command.custom_minimum_size.x = 170
-			for id in commands:
-				var clip := Character.find_action(doc.model, id)
-				command.add_item(clip.get("name", id))
-			command.select(maxi(0, commands.find(b.command)))
-			command.item_selected.connect(func(i: int) -> void: b.command = commands[i])
-			row.add_child(command)
-			tool_button(row, "trash", "移除此绑定", func() -> void: row.hide(); b["removed"] = true)
-	render.call()
-	outline_button(col, "添加绑定", func() -> void:
-		bindings.append({"key": "E", "gesture": "tap", "command": "idle"})
-		render.call(), "new")
-	var warning := label("", 12, ThemeKit.SIGNAL)
-	col.add_child(warning)
-	dialog.dialog_hide_on_ok = false
-	dialog.confirmed.connect(func() -> void:
-		var next: Array = []
-		var seen := {}
-		for b in bindings:
-			if b.get("removed", false): continue
-			if b.key.is_empty() or (not b.key in ["MouseLeft", "MouseRight"] and OS.find_keycode_from_string(b.key) == KEY_NONE):
-				warning.text = "无法识别按键：" + b.key; return
-			if seen.has(b.key + "/" + b.gesture): warning.text = "同一按键与手势只能绑定一个命令"; return
-			if (b.command.begins_with("move_") and b.gesture != "hold") or (not b.command.begins_with("move_") and b.gesture == "hold"):
-				warning.text = "持续移动用于方向命令；动作使用点按、长按或双击"; return
-			seen[b.key + "/" + b.gesture] = true
-			next.append(b)
-		edit("修改控制绑定", func() -> void: doc.model.bindings = next)
-		game_world.configure(doc.model, doc.textures)
-		rebuild_inspector()
-		dialog.queue_free())
-	dialog.canceled.connect(dialog.queue_free)
-	add_child(dialog)
-	dialog.popup_centered(Vector2i(580, 400))
+	if is_instance_valid(bindings_dialog): return
+	flush_field()
+	bindings_dialog = preload("res://editor/bindings_dialog.gd").new()
+	bindings_dialog.setup(self)
+	add_child(bindings_dialog)
 
 
 func rebuild_inspector() -> void:

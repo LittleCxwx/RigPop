@@ -5,6 +5,7 @@ const ThemeKit = preload("res://editor/theme.gd")
 
 signal frame_selected(frame: int)
 signal track_selected(id: String)
+signal key_moved(id: String, source: int, destination: int)
 
 const NAME_WIDTH := 140.0
 const HEADER := 22.0
@@ -19,6 +20,10 @@ var row_height := ROW
 var font: Font
 var font_strong: Font
 var font_micro: Font
+var scrubbing := false
+var drag_track := ""
+var drag_source := -1
+var drag_target := -1
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(400, 120)
@@ -58,7 +63,9 @@ func _draw() -> void:
 			HORIZONTAL_ALIGNMENT_LEFT, NAME_WIDTH - 20, 12, ThemeKit.INK if is_current else ThemeKit.INK_2)
 
 		for key in clip.get("tracks", {}).get(p.id, []):
-			var center := Vector2(NAME_WIDTH + (float(key.frame) + 0.5) * cell, y + row_height / 2)
+			var key_frame := int(key.frame)
+			if p.id == drag_track and key_frame == drag_source: key_frame = drag_target
+			var center := Vector2(NAME_WIDTH + (float(key_frame) + 0.5) * cell, y + row_height / 2)
 			draw_colored_polygon(PackedVector2Array([
 				center + Vector2(0, -3.5), center + Vector2(3.5, 0),
 				center + Vector2(0, 3.5), center + Vector2(-3.5, 0)]), ThemeKit.SIGNAL)
@@ -70,9 +77,44 @@ func _draw() -> void:
 	draw_rect(Rect2(cursor - 3.0, HEADER - 1.0, 7.0, 5.0), ThemeKit.SIGNAL)
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.position.x >= NAME_WIDTH:
-			frame_selected.emit(clampi(int((event.position.x - NAME_WIDTH) / cell), 0, maxi(0, int(clip.get("frames", 1)) - 1)))
-		var index := int((event.position.y - HEADER) / row_height)
-		if event.position.y > HEADER and index >= 0 and index < model.get("parts", []).size():
-			track_selected.emit(model.parts[index].id)
+	if clip.is_empty(): return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			var index := int((event.position.y - HEADER) / row_height)
+			if event.position.y >= HEADER and index >= 0 and index < model.get("parts", []).size():
+				var id: String = model.parts[index].id
+				track_selected.emit(id)
+				if event.position.x >= NAME_WIDTH:
+					var target := frame_at(event.position.x)
+					var center := Vector2(NAME_WIDTH + (target + 0.5) * cell, HEADER + (index + 0.5) * row_height)
+					for key in clip.get("tracks", {}).get(id, []):
+						if int(key.frame) == target and event.position.distance_to(center) <= 9:
+							drag_track = id
+							drag_source = target
+							drag_target = target
+			if event.position.x >= NAME_WIDTH:
+				scrubbing = true
+				frame_selected.emit(frame_at(event.position.x))
+		else:
+			if not drag_track.is_empty() and drag_source != drag_target:
+				key_moved.emit(drag_track, drag_source, drag_target)
+			cancel_drag()
+		accept_event()
+	elif event is InputEventMouseMotion and scrubbing:
+		drag_target = frame_at(event.position.x)
+		frame_selected.emit(drag_target)
+		queue_redraw()
+		accept_event()
+
+func frame_at(x: float) -> int:
+	return clampi(int(floor((x - NAME_WIDTH) / maxf(1, cell))), 0, maxi(0, int(clip.get("frames", 1)) - 1))
+
+func cancel_drag() -> void:
+	scrubbing = false
+	drag_track = ""
+	drag_source = -1
+	drag_target = -1
+	queue_redraw()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT: cancel_drag()

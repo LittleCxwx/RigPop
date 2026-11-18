@@ -20,6 +20,22 @@ func run() -> void:
 	actor.execute("wave")
 	if actor.overlay_id != "wave":
 		push_error("Exported action interface failed"); quit(1); return
+	var Character = load("res://addons/rigpop_runtime/core/character.gd")
+	var blink: Dictionary = Character.find_action(actor.model, "blink")
+	if not blink.is_empty():
+		blink.conflict = "replace"
+		if not actor.execute("blink") or actor.view.layers.size() != 2:
+			push_error("Exported independent actions do not combine"); quit(1); return
+	var joints: Array = actor.model.parts.filter(func(p: Dictionary) -> bool: return p.get("kind", "part") == "joint")
+	if not joints.is_empty():
+		var transforms: Dictionary = Character.transforms(actor.model, {}, 0)
+		if joints.size() < 3 or not transforms.has(joints.back().id):
+			push_error("Exported multi-joint chain incomplete"); quit(1); return
+		var parent: Dictionary = joints[0]
+		var before: Vector2 = transforms[joints.back().id].origin
+		parent.rotation += 30
+		if before.is_equal_approx(Character.transforms(actor.model, {}, 0)[joints.back().id].origin):
+			push_error("Exported joint parent rotation does not propagate"); quit(1); return
 	print("EXPORTED_ENTRY_PASS: instantiated, positioned, textures loaded, overlay command executed")
 	actor.queue_free()
 	await process_frame

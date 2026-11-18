@@ -109,9 +109,13 @@ func _draw() -> void:
 			if transforms.has(p.parent):
 				var parent_pos: Vector2 = o + transforms[p.parent].origin * zoom
 				draw_line(parent_pos, pos, Color(ThemeKit.CANVAS_ANCHOR, 0.5), 1.0, true)
-			draw_circle(pos, 2.5, Color(ThemeKit.CANVAS_ANCHOR, 0.9))
+			if p.get("kind", "part") == "joint":
+				draw_circle(pos, 6, ThemeKit.CANVAS)
+				draw_circle(pos, 5, ThemeKit.SIGNAL if p.id == selected else ThemeKit.CANVAS_ANCHOR, false, 1.5, true)
+				draw_circle(pos, 1.5, ThemeKit.PAPER)
+			else: draw_circle(pos, 2.5, Color(ThemeKit.CANVAS_ANCHOR, 0.9))
 
-		if p.id == selected and view.textures.has(asset):
+		if p.id == selected and p.get("kind", "part") != "joint" and view.textures.has(asset):
 			var tex: Texture2D = view.textures[asset]
 			var corners := PackedVector2Array()
 			for point in [Vector2.ZERO, Vector2(tex.get_width(), 0), tex.get_size(), Vector2(0, tex.get_height()), Vector2.ZERO]:
@@ -160,6 +164,16 @@ func _gui_input(event: InputEvent) -> void:
 func hit_test(pos: Vector2) -> String:
 	var transforms := Character.transforms(view.model, Character.find_action(view.model, view.action_id), view.frame)
 	var parts: Array = view.model.get("parts", []).duplicate()
+	if bones:
+		var nearest := ""
+		var distance := 8.0 / zoom
+		for p in parts:
+			if p.get("kind", "part") != "joint" or not p.visible or not transforms.has(p.id): continue
+			var delta: float = pos.distance_to(transforms[p.id].origin)
+			if delta <= distance:
+				nearest = p.id
+				distance = delta
+		if not nearest.is_empty(): return nearest
 	parts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.z) > int(b.z))
 	for p in parts:
 		var pose := Character.pose(Character.find_action(view.model, view.action_id), p.id, view.frame)

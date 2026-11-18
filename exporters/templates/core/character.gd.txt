@@ -10,6 +10,26 @@ static func part(id: String, title: String, parent: String, xy: Array, pivot: Ar
 	return {"id": id, "name": title, "parent": parent, "position": xy, "pivot": pivot,
 		"rotation": 0.0, "z": z, "visible": true, "asset": "assets/%s.png" % id}
 
+static func joint(id: String, title: String, parent: String, xy: Array) -> Dictionary:
+	var result := part(id, title, parent, xy, [0, 0], 0)
+	result.kind = "joint"
+	return result
+
+static func reparent(model: Dictionary, id: String, parent: String) -> bool:
+	var p := find_part(model, id)
+	if p.is_empty() or id == parent or (not parent.is_empty() and find_part(model, parent).is_empty()): return false
+	var ancestor := parent
+	while not ancestor.is_empty():
+		if ancestor == id: return false
+		ancestor = str(find_part(model, ancestor).get("parent", ""))
+	var world := transforms(model, {}, 0)
+	var parent_world: Transform2D = world.get(parent, Transform2D.IDENTITY)
+	var local: Transform2D = parent_world.affine_inverse() * world[id]
+	p.parent = parent
+	p.position = [local.origin.x, local.origin.y]
+	p.rotation = rad_to_deg(local.get_rotation())
+	return true
+
 static func empty(title: String) -> Dictionary:
 	return {"format_version": FORMAT_VERSION, "id": uid("character"), "name": title,
 		"parts": [], "actions": [], "palette": ["263642", "f3f5ef", "8ecfbe", "4a9f91", "f18b80", "bcca82", "e8bd78", "9296b0"],
@@ -23,7 +43,7 @@ static func empty(title: String) -> Dictionary:
 
 static func action(id: String, title: String, count: int = 8) -> Dictionary:
 	return {"id": id, "name": title, "frames": count, "fps": 8.0, "loop": true,
-		"overlay": false, "tracks": {}}
+		"overlay": false, "priority": 0, "conflict": "replace", "lock_movement": false, "tracks": {}}
 
 static func find_part(model: Dictionary, id: String) -> Dictionary:
 	for p in model.get("parts", []):
@@ -61,7 +81,14 @@ static func set_key(clip: Dictionary, id: String, frame: int, value: Dictionary)
 	keys.append(key)
 	keys.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.frame) < int(b.frame))
 
-static func transforms(model: Dictionary, clip: Dictionary, frame: int, overlay: Dictionary = {}, overlay_frame: int = 0) -> Dictionary:
+static func layered_pose(clip: Dictionary, id: String, frame: int, overlay: Dictionary = {}, overlay_frame: int = 0, layers: Array = []) -> Dictionary:
+	var result := pose(clip, id, frame)
+	if not overlay.get("tracks", {}).get(id, []).is_empty(): result = pose(overlay, id, overlay_frame)
+	for layer in layers:
+		if not layer.clip.get("tracks", {}).get(id, []).is_empty(): result = pose(layer.clip, id, int(layer.frame))
+	return result
+
+static func transforms(model: Dictionary, clip: Dictionary, frame: int, overlay: Dictionary = {}, overlay_frame: int = 0, layers: Array = []) -> Dictionary:
 	var result := {}
 	var pending: Array = model.get("parts", []).duplicate()
 	for _pass in range(pending.size() + 1):
@@ -69,9 +96,7 @@ static func transforms(model: Dictionary, clip: Dictionary, frame: int, overlay:
 			var p: Dictionary = pending[i]
 			if not str(p.parent).is_empty() and not result.has(p.parent):
 				continue
-			var sampled := pose(clip, p.id, frame)
-			if overlay.get("tracks", {}).has(p.id):
-				sampled = pose(overlay, p.id, overlay_frame)
+			var sampled := layered_pose(clip, p.id, frame, overlay, overlay_frame, layers)
 			var local := Transform2D(deg_to_rad(float(p.rotation) + float(sampled.get("rotation", 0))), vec(p.position) + vec(sampled.get("position", [0, 0])))
 			result[p.id] = result.get(p.parent, Transform2D.IDENTITY) * local
 			pending.remove_at(i)
@@ -112,6 +137,7 @@ static func validate(model: Dictionary) -> PackedStringArray:
 		if ids.has(p.id):
 			errors.append("部件 ID 重复：%s" % p.id)
 		if not p.id is String or not safe_id(str(p.id)) or not p.name is String or not p.parent is String or not p.visible is bool or not numeric(p.rotation) or not numeric(p.z): errors.append("部件字段类型无效")
+		if p.has("kind") and p.kind not in ["part", "joint"]: errors.append("部件类型无效")
 		ids[p.id] = true
 		for field in ["position", "pivot"]:
 			if not valid_vector(p[field]):
@@ -140,6 +166,9 @@ static func validate(model: Dictionary) -> PackedStringArray:
 		if action_ids.has(clip.id) or int(clip.frames) < 1 or int(clip.frames) > 240 or float(clip.fps) <= 0 or float(clip.fps) > 120:
 			errors.append("动作 ID、长度或帧率无效")
 		action_ids[clip.id] = true
+		if clip.has("priority") and (not numeric(clip.priority) or float(clip.priority) < -100 or float(clip.priority) > 100): errors.append("动作优先级无效")
+		if clip.get("conflict", "replace") not in ["replace", "reject"]: errors.append("动作冲突规则无效")
+		if not clip.get("lock_movement", false) is bool: errors.append("动作移动锁定无效")
 		if not clip.tracks is Dictionary:
 			errors.append("动作轨道必须为对象")
 			continue

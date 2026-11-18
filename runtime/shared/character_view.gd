@@ -8,6 +8,7 @@ var action_id := "idle"
 var frame := 0
 var overlay_id := ""
 var overlay_frame := 0
+var layers: Array = []
 var mirrored := false
 var playing := false
 var clock := 0.0
@@ -24,11 +25,11 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	var clip := Character.find_action(model, action_id)
 	var overlay := Character.find_action(model, overlay_id)
-	var transforms := Character.transforms(model, clip, frame, overlay, overlay_frame)
+	var transforms := Character.transforms(model, clip, frame, overlay, overlay_frame, layers)
 	var parts: Array = model.get("parts", []).duplicate()
 	parts.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.z) < int(b.z))
 	for p in parts:
-		var pose := Character.pose(overlay if overlay.get("tracks", {}).has(p.id) else clip, p.id, overlay_frame if overlay.get("tracks", {}).has(p.id) else frame)
+		var pose := Character.layered_pose(clip, p.id, frame, overlay, overlay_frame, layers)
 		var asset: String = str(pose.get("asset", p.asset))
 		if not p.visible or not pose.get("visible", true) or not textures.has(asset) or not transforms.has(p.id):
 			continue
