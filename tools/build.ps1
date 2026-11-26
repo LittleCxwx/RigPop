@@ -1,10 +1,12 @@
-param([string]$Godot = "godot", [string]$Icon = "")
+param([string]$Godot = "godot", [string]$Icon = "", [string]$Python = "python")
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 if (-not (Get-Command $Godot -ErrorAction SilentlyContinue)) { throw "Set -Godot to Godot 4.7.2 console executable." }
 $version = & $Godot --version
 if ($version -notlike "4.7.2.*") { throw "Expected Godot 4.7.2; received $version" }
 & (Join-Path $PSScriptRoot "sync_templates.ps1")
+& (Join-Path $PSScriptRoot "build_native.ps1") -Godot $Godot -Python $Python
+& (Join-Path $PSScriptRoot "build_psd_helper.ps1") -Python $Python
 New-Item -ItemType Directory -Path (Join-Path $projectRoot "build/hosts") -Force | Out-Null
 if (-not (Test-Path -LiteralPath (Join-Path $projectRoot "build/templates/windows_release_x86_64.exe"))) {
     throw "Missing Godot 4.7.2 Windows release template. Run tools/download_windows_template.py first."
@@ -24,6 +26,12 @@ foreach ($preset in @("RigPop", "DesktopHost")) {
     $exportCode = $LASTEXITCODE
     $exportLog | Set-Content -LiteralPath (Join-Path $projectRoot "build/export-$preset.log")
     if ($exportCode -ne 0 -or ($exportLog -match "SCRIPT ERROR|Failed to load script")) { throw "Export failed: $preset. See build/export-$preset.log" }
+}
+# The extension descriptor retains its resource-relative library path at runtime.
+foreach ($runtimeRoot in @("build", "build/hosts")) {
+    $libraryDir = Join-Path $projectRoot "$runtimeRoot/platform/windows/bin"
+    New-Item -ItemType Directory -Path $libraryDir -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $projectRoot "platform/windows/bin/rigpop_windows.dll") -Destination $libraryDir -Force
 }
 Write-Host "Editor: $(Join-Path $projectRoot 'build/RigPop.exe')"
 Write-Host "Desktop host: $(Join-Path $projectRoot 'build/hosts/RigPopPet.exe')"

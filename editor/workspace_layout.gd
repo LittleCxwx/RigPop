@@ -6,6 +6,7 @@ const ConfirmBox = preload("res://editor/confirm_box.gd")
 const Stage = preload("res://editor/stage.gd")
 const PixelCanvas = preload("res://editor/pixel_canvas.gd")
 const Timeline = preload("res://editor/timeline.gd")
+const Character = preload("res://core/character.gd")
 
 const RAIL_WIDTH := 196
 const INSPECTOR_WIDTH := 268
@@ -171,6 +172,13 @@ func build_library(parent: Node) -> void:
 	app.tree.custom_minimum_size.y = 120
 	app.tree.hide_root = true
 	app.tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	app.tree.button_clicked.connect(func(item: TreeItem, _column: int, _id: int, mouse: int) -> void:
+		if mouse != MOUSE_BUTTON_LEFT: return
+		var part := Character.find_part(app.doc.model, str(item.get_metadata(0)))
+		if part.is_empty(): return
+		app.edit("切换可见性", func() -> void: part.visible = not part.visible)
+		app.rebuild_tree.call_deferred()
+		app.rebuild_inspector.call_deferred())
 	app.tree.item_selected.connect(func() -> void:
 		if app.building: return
 		var item: TreeItem = app.tree.get_selected()
@@ -328,6 +336,8 @@ func build_timeline(parent: Node) -> void:
 	small_tool(bar, "new", "新增动作", app.add_action)
 	small_tool(bar, "copy", "复制动作", app.duplicate_action)
 	small_tool(bar, "trash", "删除动作（可撤销）", app.delete_action)
+	small_tool(bar, "play", "从预设动作库添加（按骨骼模板套用）", app.show_presets)
+	small_tool(bar, "save", "将当前动作存为骨骼预设", app.save_action_as_preset)
 
 	divider(bar)
 

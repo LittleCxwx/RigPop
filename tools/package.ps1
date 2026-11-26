@@ -11,7 +11,7 @@ $releaseRoot = Join-Path $stageParent $packageName
 $archive = Join-Path $buildRoot "$packageName.zip"
 try {
     # Build from an explicit file list, never from a previously used portable directory.
-    foreach ($relative in @("RigPop.exe", "RigPop.pck", "hosts/RigPopPet.exe", "hosts/RigPopPet.pck")) {
+    foreach ($relative in @("RigPop.exe", "RigPop.pck", "rigpop_windows.dll", "platform/windows/bin/rigpop_windows.dll", "hosts/RigPopPet.exe", "hosts/RigPopPet.pck", "hosts/rigpop_windows.dll", "hosts/platform/windows/bin/rigpop_windows.dll")) {
         $source = Join-Path $buildRoot $relative
         if (-not (Test-Path -LiteralPath $source)) { throw "Missing build output: $relative" }
         $target = Join-Path $releaseRoot $relative
@@ -19,6 +19,10 @@ try {
         Copy-Item -LiteralPath $source -Destination $target
     }
     New-Item -ItemType Directory -Path (Join-Path $releaseRoot "licenses") -Force | Out-Null
+    $helper = Join-Path $buildRoot "helpers/psd/RigPopPsd"
+    if (-not (Test-Path -LiteralPath (Join-Path $helper "RigPopPsd.exe"))) { throw "Missing bundled PSD decoder." }
+    New-Item -ItemType Directory -Path (Join-Path $releaseRoot "helpers/psd") -Force | Out-Null
+    Copy-Item -LiteralPath $helper -Destination (Join-Path $releaseRoot "helpers/psd") -Recurse
     foreach ($license in Get-ChildItem -LiteralPath (Join-Path $projectRoot "licenses") -File) {
         Copy-Item -LiteralPath $license.FullName -Destination (Join-Path $releaseRoot "licenses")
     }

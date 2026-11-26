@@ -22,7 +22,7 @@ Godot 主程序和同一 ZIP 内的 console 程序应放在一起，不要只拷
 
 ## 本机构建 Windows 便携包
 
-构建者需安装 PowerShell 7、Godot 4.7.2 与 Python 3。Python 只用于首次下载模板，
+构建者需安装 PowerShell 7、Godot 4.7.2 与 Python 3.12。Python 用于下载模板、构建 PSD 辅助程序及原生扩展，
 不会成为最终用户的运行依赖。进入解压或克隆的仓库根目录，使用自己的 Godot 实际路径：
 
 ```powershell
@@ -39,8 +39,13 @@ python ./tools/download_windows_template.py
 ./tools/verify_package.ps1
 ```
 
+首次构建会在 `build/` 建立隔离环境，安装 `tools/psd/requirements.txt` 锁定的解析和打包依赖，
+以及 Zig 0.13.0 编译器。`tools/build_native.ps1` 使用引擎生成的 GDExtension 头文件编译
+Windows 系统适配 DLL；`tools/build_psd_helper.ps1` 生成包含 Python 运行时的 PSD 导入组件。
+最终用户不需安装这些开发工具。源码模式使用 PSD 导入前也需运行辅助程序构建脚本。
+
 当前产物为 `build/RigPop.exe`、`build/RigPop.pck`、`build/hosts/`、
-`build/RigPop-0.1.1-win64.zip` 和 `build/SHA256SUMS.txt`。
+`build/RigPop-0.1.2-win64.zip` 和 `build/SHA256SUMS.txt`。
 ZIP 文件名从构建时读取的 `project.godot` 应用版本生成，不需要手动改打包脚本。
 重新打包使用独立暂存目录和明确的文件清单，不会把旧发布目录中的用户作品带进去。
 
@@ -75,14 +80,14 @@ Windows 导出会将图标写入 EXE，Godot 窗口也使用相应设置。无�
 
 ```powershell
 git push origin main
-git tag -a v0.1.1 -m 'RigPop 0.1.1 Demo'
-git push origin v0.1.1
+git tag -a v0.1.2 -m 'RigPop 0.1.2 Demo'
+git push origin v0.1.2
 ```
 
-标签示例仅在 `v0.1.1` 尚未存在时使用。后续版本使用新的版本号，不覆盖旧标签或已发布资源。
+发布新版本时，请使用与应用版本一致的新标签。
 程序底栏、导出清单和导出说明统一读取 `project.godot` 的 `config/version`。
 标签构建会在下载导出模板之前校验版本，构建后再次核对生成的版本信息。
-本机可先执行 `& $godot --headless --path . --script tools/check_release_version.gd -- --tag v0.1.1`。
+本机可先执行 `& $godot --headless --path . --script tools/check_release_version.gd -- --tag v0.1.2`。
 版本不一致时不要只重新运行旧标签；旧标签仍指向旧提交。应提交修正后使用新的版本标签。
 工作流在 Windows 上下载锁定版本的 Godot 和模板、构建、执行源码检查、打包、验证成品，
 通过后建立标为预览版的 GitHub Release，并附上 ZIP 和 SHA-256 文件。

@@ -25,8 +25,22 @@ func expect(condition: bool, message: String) -> void:
 func _run() -> void:
 	output = ProjectSettings.globalize_path("res://tests/output/run_%d" % Time.get_ticks_usec())
 	DirAccess.make_dir_recursive_absolute(output)
-	var doc := Templates.make()
+	var doc := Templates.make("traveler")
 	expect(Character.validate(doc.model).is_empty(), "human template valid")
+	var oc := Templates.make("oc")
+	expect(Character.validate(oc.model).is_empty(), "three-head OC template validates")
+	expect(Character.find_part(oc.model, "hand_l").parent == "forearm_l"
+		and Character.find_part(oc.model, "foot_r").parent == "shin_r", "OC wrists and ankles inherit separate lower limbs")
+	var accessories_ready := true
+	for id in ["tail", "shirt", "hair", "scarf"]:
+		var part := Character.find_part(oc.model, id)
+		accessories_ready = accessories_ready and not part.visible and oc.images[part.asset].get_used_rect().has_area()
+	expect(accessories_ready, "OC accessories have editable images and start hidden")
+	expect(not Character.find_action(oc.model, "tail_wag").tracks.get("tail", []).is_empty(), "optional tail has an animation")
+	expect(oc.save_to(output.path_join("oc")).is_empty(), "OC project saves with all layers")
+	var saved_oc := Store.new()
+	expect(saved_oc.open_file(output.path_join("oc/character.rigpop.json")).is_empty(), "OC layers and expression image reopen")
+	print("OC_TEST_PROJECT ", output.path_join("oc/character.rigpop.json"))
 	var slime := Templates.make("slime")
 	expect(Character.validate(slime.model).is_empty(), "nonhuman template valid")
 	expect(slime.model.parts.size() == 2, "nonhuman has no mandatory limbs")

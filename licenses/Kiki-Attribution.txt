@@ -1,0 +1,24 @@
+Chibi Kiki II (2019 Sketch, 2025 Cleanup)
+Copyright Tyson Tan.
+Kiki the Cyber Squirrel is Krita's mascot, designed by Tyson Tan.
+
+Artwork and license declaration:
+https://krita.org/en/about/mascot/
+Original transparent image:
+https://krita.org/images/pages/electrichearts_20200928A_kiki_a_trans_EN.png
+Artist: https://tysontan.com/
+
+This artwork is used under Creative Commons Attribution-ShareAlike 4.0
+International (CC BY-SA 4.0), one of the licenses offered by the artist.
+https://creativecommons.org/licenses/by-sa/4.0/
+See CC-BY-SA-4.0.txt for the license text.
+
+RigPop modifications: isolated the connected character figure from decorative
+lettering and sparkles, cropped, resized with its original alpha, and added
+position/rotation animation. The adapted Kiki images and character animation
+data remain licensed under CC BY-SA 4.0. No endorsement by Tyson Tan, Krita,
+or KDE is implied. This asset license does not replace the software's license.
+
+This is existing licensed artwork, not AI-generated or original RigPop art.
+The complete original PNG is retained in tools/art/sources/kiki/chibi-ii.png
+in the source project. assets/templates/kiki/provenance.json records its hash.

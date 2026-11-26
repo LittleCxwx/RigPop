@@ -1,0 +1,230 @@
+{
+	"format_version": 1,
+	"id": "character_lingxi_template",
+	"name": "灵犀",
+	"rig": "rigpop.quadruped.v1",
+	"parts": [
+		{
+			"id": "scarf_tail",
+			"role": "scarf_tail",
+			"name": "围巾飘带",
+			"parent": "body",
+			"position": [
+				-14,
+				-18
+			],
+			"pivot": [
+				29,
+				10
+			],
+			"rotation": 0.0,
+			"z": -2,
+			"visible": true,
+			"asset": "assets/scarf_tail.png"
+		},
+		{
+			"id": "tail",
+			"role": "tail",
+			"name": "尾巴",
+			"parent": "body",
+			"position": [
+				10,
+				4
+			],
+			"pivot": [
+				1,
+				30
+			],
+			"rotation": 0.0,
+			"z": -1,
+			"visible": true,
+			"asset": "assets/tail.png"
+		},
+		{
+			"id": "leg_l",
+			"role": "leg_l",
+			"name": "左爪",
+			"parent": "body",
+			"position": [
+				-8,
+				2
+			],
+			"pivot": [
+				8,
+				0
+			],
+			"rotation": 0.0,
+			"z": 0,
+			"visible": true,
+			"asset": "assets/leg_l.png"
+		},
+		{
+			"id": "leg_r",
+			"role": "leg_r",
+			"name": "右爪",
+			"parent": "body",
+			"position": [
+				8,
+				2
+			],
+			"pivot": [
+				8,
+				0
+			],
+			"rotation": 0.0,
+			"z": 0,
+			"visible": true,
+			"asset": "assets/leg_r.png"
+		},
+		{
+			"id": "body",
+			"role": "body",
+			"name": "身体",
+			"parent": "",
+			"position": [
+				0,
+				-14
+			],
+			"pivot": [
+				16,
+				22
+			],
+			"rotation": 0.0,
+			"z": 1,
+			"visible": true,
+			"asset": "assets/body.png"
+		},
+		{
+			"id": "scarf",
+			"role": "scarf",
+			"name": "围巾",
+			"parent": "body",
+			"position": [
+				0,
+				-19
+			],
+			"pivot": [
+				17,
+				7
+			],
+			"rotation": 0.0,
+			"z": 2,
+			"visible": true,
+			"asset": "assets/scarf.png"
+		},
+		{
+			"id": "arm_l",
+			"role": "arm_l",
+			"name": "左臂",
+			"parent": "body",
+			"position": [
+				-16,
+				-13
+			],
+			"pivot": [
+				4,
+				3
+			],
+			"rotation": 0.0,
+			"z": 3,
+			"visible": true,
+			"asset": "assets/arm_l.png"
+		},
+		{
+			"id": "arm_r",
+			"role": "arm_r",
+			"name": "右臂",
+			"parent": "body",
+			"position": [
+				16,
+				-13
+			],
+			"pivot": [
+				8,
+				3
+			],
+			"rotation": 0.0,
+			"z": 3,
+			"visible": true,
+			"asset": "assets/arm_r.png"
+		},
+		{
+			"id": "ear_l",
+			"role": "ear_l",
+			"name": "左耳",
+			"parent": "head",
+			"position": [
+				-18,
+				-32
+			],
+			"pivot": [
+				7,
+				17
+			],
+			"rotation": 0.0,
+			"z": 4,
+			"visible": true,
+			"asset": "assets/ear_l.png"
+		},
+		{
+			"id": "ear_r",
+			"role": "ear_r",
+			"name": "右耳",
+			"parent": "head",
+			"position": [
+				18,
+				-32
+			],
+			"pivot": [
+				8,
+				17
+			],
+			"rotation": 0.0,
+			"z": 4,
+			"visible": true,
+			"asset": "assets/ear_r.png"
+		},
+		{
+			"id": "head",
+			"role": "head",
+			"name": "头部",
+			"parent": "body",
+			"position": [
+				0,
+				-22
+			],
+			"pivot": [
+				27,
+				45
+			],
+			"rotation": 0.0,
+			"z": 5,
+			"visible": true,
+			"asset": "assets/head.png"
+		}
+	],
+	"actions": [],
+	"palette": [
+		"2b2c48",
+		"fbfaf9",
+		"e7e3eb",
+		"c2bfd7",
+		"655eea",
+		"4742bd",
+		"8b88f2",
+		"d69da3",
+		"3f57ad",
+		"677cdb"
+	],
+	"bindings": [],
+	"game": {
+		"speed": 115.0,
+		"collision_radius": 9.0
+	},
+	"desktop": {
+		"scale": 4,
+		"always_on_top": true,
+		"wander": false
+	},
+	"modules": {}
+}

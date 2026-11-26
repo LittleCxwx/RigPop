@@ -1,0 +1,7 @@
+[configuration]
+entry_symbol = "rigpop_windows_init"
+compatibility_minimum = "4.7"
+reloadable = false
+
+[libraries]
+windows.x86_64 = "res://platform/windows/bin/rigpop_windows.dll"

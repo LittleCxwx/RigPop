@@ -3,6 +3,14 @@ extends Control
 const Character = preload("res://core/character.gd")
 const Store = preload("res://services/project_store.gd")
 const Templates = preload("res://services/templates.gd")
+const DesktopStates = preload("res://core/desktop_states.gd")
+const DesktopStatesDialog = preload("res://editor/desktop_states_dialog.gd")
+const Presets = preload("res://core/presets.gd")
+const Rig = preload("res://core/rig.gd")
+const PsdReader = preload("res://services/psd_reader.gd")
+const PsdMapper = preload("res://services/psd_mapper.gd")
+const PsdImportDialog = preload("res://editor/psd_import_dialog.gd")
+const PresetStore = preload("res://services/preset_store.gd")
 const History = preload("res://core/history.gd")
 const ThemeKit = preload("res://editor/theme.gd")
 const Icons = preload("res://editor/icons.gd")
@@ -70,7 +78,7 @@ func _ready() -> void:
 	get_tree().auto_accept_quit = false
 	data_root = (OS.get_executable_path().get_base_dir() if not OS.has_feature("editor") else ProjectSettings.globalize_path("res://")).path_join("portable_data")
 	var data_error := DirAccess.make_dir_recursive_absolute(data_root)
-	doc = Templates.make()
+	doc = Templates.make("oc")
 	var recent_data = JSON.parse_string(FileAccess.get_file_as_string(data_root.path_join("recent.json"))) if FileAccess.file_exists(data_root.path_join("recent.json")) else null
 	if recent_data is Array:
 		for item in recent_data:
@@ -287,6 +295,8 @@ func rebuild_tree() -> void:
 			if p.get("kind", "part") == "joint": item.set_icon(0, Icons.get_icon("bone", 14))
 			item.set_metadata(0, p.id)
 			item.set_custom_color(0, ThemeKit.INK if p.visible else ThemeKit.MUTED)
+			item.add_button(0, Icons.get_icon("eye", 14, ThemeKit.INK_2 if p.visible else ThemeKit.MUTED),
+				0, false, "隐藏部件" if p.visible else "显示部件")
 			items[p.id] = item
 			if p.id == selected: item.select(0)
 			pending.remove_at(i)
@@ -554,15 +564,21 @@ func file_selected(path: String) -> void:
 	elif file_purpose == "image": accept_image(path)
 	elif file_purpose == "replace": replace_image(path)
 	elif file_purpose == "frame_image": replace_image(path, true)
+	elif file_purpose == "psd": accept_psd(path)
 
 func show_new() -> void:
 	var dialog := AcceptDialog.new()
 	dialog.title = "新建角色"
-	dialog.min_size = Vector2i(360, 160)
+	dialog.min_size = Vector2i(400, 200)
 	var col := VBoxContainer.new()
 	dialog.add_child(col)
-	outline_button(col, "薄荷旅人 · 分部件人形", func() -> void: dialog.hide(); guard(func() -> void: new_character("traveler")))
+	outline_button(col, "三头身 OC 底模 · 分层人形与可换配饰", func() -> void: dialog.hide(); guard(func() -> void: new_character("oc")))
+	outline_button(col, "Kiki · Q 版赛博松鼠（完整立绘动画）", func() -> void: dialog.hide(); guard(func() -> void: new_character("kiki")))
+	outline_button(col, "蓝衣冒险家 · Q 版人形（含动作与表情）", func() -> void: dialog.hide(); guard(func() -> void: new_character("adventurer")))
+	outline_button(col, "灵犀 · 四足小兽（含预设动作）", func() -> void: dialog.hide(); guard(func() -> void: new_character("lingxi")))
 	outline_button(col, "果冻团子 · 非人形", func() -> void: dialog.hide(); guard(func() -> void: new_character("slime")))
+	outline_button(col, "人形基础 · 分部件骨架", func() -> void: dialog.hide(); guard(func() -> void: new_character("traveler")))
+	outline_button(col, "从 PSD 导入分层角色", func() -> void: dialog.hide(); guard(import_psd))
 	outline_button(col, "空白角色", func() -> void: dialog.hide(); guard(func() -> void: new_character("empty")))
 	add_child(dialog)
 	dialog.popup_centered()
@@ -570,7 +586,7 @@ func show_new() -> void:
 	dialog.confirmed.connect(dialog.queue_free)
 
 func new_character(kind: String) -> void:
-	doc = Templates.make("traveler" if kind == "empty" else kind)
+	doc = Templates.make(kind)
 	if kind == "empty":
 		doc.model = Character.empty("未命名角色")
 		doc.model.actions = [Character.action("idle", "待机")]
@@ -660,6 +676,79 @@ func import_image() -> void:
 	file_dialog.title = "导入美术素材"
 	file_dialog.popup_centered()
 
+func import_psd() -> void:
+	file_purpose = "psd"
+	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	file_dialog.filters = PackedStringArray(["*.psd ; Photoshop 分层文件"])
+	file_dialog.title = "导入 PSD 分层角色"
+	file_dialog.popup_centered()
+
+## 读取 PSD、按骨骼模板自动匹配图层，然后让用户逐项确认后再装配。
+func accept_psd(path: String) -> void:
+	var reader := PsdReader.new()
+	var progress := AcceptDialog.new()
+	progress.title = "PSD 导入"
+	progress.dialog_text = "正在读取图层…"
+	progress.get_ok_button().hide()
+	progress.unresizable = true
+	add_child(progress)
+	progress.popup_centered(Vector2i(300, 100))
+	var worker := Thread.new()
+	var started := worker.start(reader.load_file.bind(path))
+	if started != OK:
+		progress.queue_free()
+		notify("无法启动 PSD 导入", true)
+		return
+	while worker.is_alive():
+		await get_tree().create_timer(0.05).timeout
+	var error: String = worker.wait_to_finish()
+	progress.queue_free()
+	if not error.is_empty():
+		notify(error, true)
+		return
+	var dialog := PsdImportDialog.new()
+	dialog.setup(reader, path)
+	dialog.import_requested.connect(func(chosen: Array, rig: String) -> void:
+		apply_psd(path, reader, chosen, rig))
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(660, 480))
+
+func apply_psd(path: String, _reader: RefCounted, chosen: Array, rig: String) -> void:
+	var model := PsdMapper.build_model(chosen, rig, path.get_basename().get_file())
+	var candidate := Store.new()
+	candidate.model = model
+	for entry in chosen:
+		candidate.images["assets/%s.png" % entry.part_id] = entry.image
+	for preset in Presets.for_rig(rig):
+		var clip := Templates.apply_preset(model, preset)
+		if not clip.is_empty(): model.actions.append(clip)
+	if model.actions.is_empty(): model.actions = [Character.action("idle", "待机", 8)]
+	for binding in model.bindings:
+		if not str(binding.command).begins_with("move_") and Character.find_action(model, str(binding.command)).is_empty():
+			binding.command = str(model.actions[0].id)
+	var source_key := "sources/" + FileAccess.get_sha256(path).left(20) + ".psd"
+	candidate.sources[source_key] = FileAccess.get_file_as_bytes(path)
+	var mapping := []
+	for entry in chosen:
+		mapping.append({"key": entry.get("key", ""), "name": entry.name, "part": entry.part_id, "role": entry.get("role", "")})
+	model.modules["import.psd"] = {"source": path.get_file(), "source_file": source_key, "layers": mapping,
+		"imported_at": Time.get_datetime_string_from_system()}
+	var errors := Character.validate(model)
+	if not errors.is_empty():
+		notify("\n".join(errors), true)
+		return
+	begin_change()
+	doc.restore(candidate.snapshot())
+	doc.path = ""
+	selected = str(model.parts[0].id)
+	action_id = str(model.actions[0].id)
+	frame = 0
+	playing = false
+	commit_change("导入 PSD")
+	refresh_all()
+	notify("已导入 %d 个部件与 %d 个动作" % [chosen.size(), model.actions.size()])
+
+
 func accept_image(path: String) -> void:
 	var img := Image.load_from_file(path)
 	if img == null or img.is_empty(): notify("图片无法读取", true); return
@@ -715,6 +804,83 @@ func accept_image(path: String) -> void:
 	add_child(dialog)
 	dialog.popup_centered(Vector2i(400, 320))
 
+## 预设动作库：按当前骨骼列出可用动作，勾选后一次性添加。
+func show_presets() -> void:
+	var rig := Rig.detect(doc.model)
+	if rig.is_empty():
+		notify("请先在角色属性中指定骨骼模板", true)
+		return
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "预设动作库 · " + Rig.rig_name(rig)
+	dialog.ok_button_text = "添加到时间轴"
+	dialog.cancel_button_text = "取消"
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(400, 320)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	dialog.add_child(scroll)
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(col)
+	var clips: Array = []
+	for preset in Presets.for_rig(rig):
+		var clip := Templates.apply_preset(doc.model, str(preset))
+		if not clip.is_empty(): clips.append(clip)
+	clips.append_array(PresetStore.load_clips(data_root.path_join("presets"), doc.model))
+	var checks: Array = []
+	for clip in clips:
+		var existing := not Character.find_action(doc.model, str(clip.id)).is_empty()
+		var check := CheckBox.new()
+		check.text = "%s · %d 帧 / %d fps" % [clip.name, int(clip.frames), int(clip.fps)]
+		check.button_pressed = not existing
+		check.disabled = existing
+		check.tooltip_text = "已存在同名动作" if existing else "添加后可继续编辑"
+		if clip.has("missing_roles"):
+			var missing: Array = []
+			for role in clip.missing_roles: missing.append(Rig.role_title(str(role)))
+			check.tooltip_text += "\n未匹配部位：" + "、".join(missing)
+		col.add_child(check)
+		checks.append([clip, check])
+	dialog.confirmed.connect(func() -> void:
+		var added := 0
+		begin_change()
+		for pair in checks:
+			if not pair[1].button_pressed or pair[1].disabled: continue
+			if not Character.find_action(doc.model, str(pair[0].id)).is_empty(): continue
+			doc.model.actions.append(pair[0].duplicate(true))
+			added += 1
+		commit_change("添加预设动作")
+		refresh_all()
+		notify("已添加 %d 个预设动作" % added)
+		dialog.queue_free())
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(440, 400))
+
+func save_action_as_preset() -> void:
+	var clip := Character.find_action(doc.model, action_id)
+	if clip.is_empty(): return
+	if Rig.detect(doc.model).is_empty():
+		notify("请先在角色属性中指定骨骼模板", true)
+		return
+	var error := PresetStore.save_clip(clip, doc.model, data_root.path_join("presets"))
+	notify(error if not error.is_empty() else "动作已保存到预设库", not error.is_empty())
+
+func set_rig(rig: String) -> void:
+	edit("修改骨骼模板", func() -> void:
+		doc.model.rig = rig
+		if not rig.is_empty(): Rig.assign_roles(doc.model))
+	rebuild_inspector.call_deferred()
+
+func set_part_role(id: String, role: String) -> void:
+	var part := Character.find_part(doc.model, id)
+	if part.is_empty(): return
+	for other in doc.model.parts:
+		if other.id != id and not role.is_empty() and other.get("role", "") == role:
+			notify("此部位已匹配：" + str(other.name), true)
+			rebuild_inspector.call_deferred()
+			return
+	edit("修改骨骼匹配", func() -> void: part.role = role)
+
 func show_export() -> void:
 	var dialog := AcceptDialog.new()
 	dialog.title = "导出角色"
@@ -748,6 +914,18 @@ func directory_selected(directory: String) -> void:
 	var result: Dictionary = Exporter.export_package(doc, directory, export_kind)
 	if not result.error.is_empty(): notify(result.error, true)
 	else: notify("导出完成  ·  " + result.path)
+
+func show_desktop_states() -> void:
+	var dialog := DesktopStatesDialog.new()
+	dialog.theme = theme
+	dialog.setup(doc.model)
+	dialog.applied.connect(func(items: Array) -> void:
+		edit("修改桌宠状态", func() -> void:
+			doc.model.modules[DesktopStates.MODULE] = {"states": items})
+		if desktop_pid > 0 and OS.is_process_running(desktop_pid):
+			notify("桌宠状态已设置，重新启动试演后生效"))
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(650, 420))
 
 func launch_desktop() -> void:
 	if desktop_pid > 0 and OS.is_process_running(desktop_pid):

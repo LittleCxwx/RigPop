@@ -32,7 +32,13 @@ func _ready() -> void:
 	add_child(ghost)
 	view = View.new()
 	add_child(view)
-	resized.connect(queue_redraw)
+	resized.connect(_resize_view)
+
+func _resize_view() -> void:
+	if view != null and not view.model.is_empty():
+		update_view(view.model, view.textures, view.action_id, view.frame)
+	else:
+		queue_redraw()
 
 func origin() -> Vector2:
 	return (size * 0.5 - bounds.get_center() * zoom).round() + pan

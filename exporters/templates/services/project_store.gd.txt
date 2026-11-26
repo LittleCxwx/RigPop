@@ -5,17 +5,23 @@ const Character = preload("res://core/character.gd")
 var model: Dictionary = {}
 var images: Dictionary = {}
 var textures: Dictionary = {}
+var sources: Dictionary = {}
 var path := ""
 var saved_fingerprint := ""
+
+static func safe_source(path: String) -> bool:
+	return path.get_base_dir() == "sources" and path.get_extension() == "psd" and Character.safe_id(path.get_file().get_basename())
 
 func snapshot() -> Dictionary:
 	var art := {}
 	for key in images:
 		art[key] = images[key].save_png_to_buffer()
-	return {"model": model.duplicate(true), "art": art}
+	return {"model": model.duplicate(true), "art": art, "sources": sources.duplicate(), "path": path}
 
 func restore(state: Dictionary) -> void:
 	model = state.model.duplicate(true)
+	path = str(state.get("path", ""))
+	sources = state.get("sources", {}).duplicate()
 	images.clear()
 	for key in state.art:
 		var img := Image.new()
@@ -37,7 +43,7 @@ func fingerprint() -> String:
 func dirty() -> bool:
 	return fingerprint() != saved_fingerprint
 
-func save_to(directory: String) -> String:
+func save_to(directory: String, include_sources: bool = true) -> String:
 	var errors := Character.validate(model)
 	if not errors.is_empty():
 		return "\n".join(errors)
@@ -51,6 +57,18 @@ func save_to(directory: String) -> String:
 		return "无法创建目录：" + directory
 	# Content-addressed files make the JSON rename the transaction commit point.
 	var disk_model := model.duplicate(true)
+	if include_sources:
+		for relative in sources:
+			if not safe_source(str(relative)):
+				return "源文件路径无效"
+			if DirAccess.make_dir_recursive_absolute(directory.path_join(str(relative).get_base_dir())) != OK:
+				return "无法创建源文件目录"
+			var source := FileAccess.open(directory.path_join(relative), FileAccess.WRITE)
+			if source == null: return "无法保存 PSD 源文件"
+			source.store_buffer(sources[relative])
+			source.close()
+	elif disk_model.get("modules", {}).has("import.psd"):
+		disk_model.modules["import.psd"].erase("source_file")
 	var mapping := {}
 	var required := {}
 	for p in model.parts: required[p.asset] = true
@@ -125,8 +143,16 @@ func open_file(file_path: String) -> String:
 			return "素材超过 4096 像素上限"
 		img.convert(Image.FORMAT_RGBA8)
 		next_images[relative] = img
+	var next_sources := {}
+	var source_key := str(parser.data.get("modules", {}).get("import.psd", {}).get("source_file", ""))
+	if not source_key.is_empty():
+		if not safe_source(source_key): return "PSD 源文件路径无效"
+		var source_path := file_path.get_base_dir().path_join(source_key)
+		if not FileAccess.file_exists(source_path): return "PSD 源文件缺失：" + source_key
+		next_sources[source_key] = FileAccess.get_file_as_bytes(source_path)
 	model = parser.data
 	images = next_images
+	sources = next_sources
 	path = file_path.get_base_dir()
 	refresh_textures()
 	saved_fingerprint = fingerprint()

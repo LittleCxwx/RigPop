@@ -1,4 +1,71 @@
-# RigPop 0.1.0 验收记录
+# RigPop 验收记录
+
+## 2026-11-23 Q 版蓝衣冒险家适配
+
+- 默认新角色改为 Kenney Toon Characters 的 Female adventurer（CC0-1.0），使用原始分部件
+  PNG；来源、原始 SVG、装配脚本与许可证均保留。美术来源为 existing，不是 AI 生成或代码绘画。
+- 通过原始 SVG 的变换信息对齐 9 个部件，后发跟随头部、手掌跟随手臂，脚底原点一致。
+  六个骨架动作和两种原画表情可编辑、保存重开，并随角色包导出。
+- 为人形预设调整行走、奔跑、招手与跳跃：交替踏步、控制正面摆臂幅度、招手避开头部，
+  跳跃时双手抬过肩部。其他骨架仍使用各自的动作数据，不修改旧角色工程。
+- `tests/adventurer_test.gd` 实际 OpenGL 窗口 29 项通过、0 失败，检查部件挂接、脚底原点、
+  招手与跳跃姿势、换图恢复、保存回读、两种运行导出、三种工作区尺寸，以及 8 个动作的
+  全部 68 帧均有实际绘制且未裁切。动作逐帧检查板在 `build/previews/adventurer-actions-*.png`，
+  动图在 `build/previews/adventurer-motion.gif`。
+- `tests/run_tests.gd` 无窗口 75 项通过，`tests/rig_import_test.gd` 无窗口 28 项通过。
+  新人物执行实际桌宠窗口测试，托盘、显隐、置顶、拖动、缩放和透明渲染均通过，0 失败。
+- 新人物导出的 Godot 工程完成全新导入，`tests/export_probe.gd` 实例化、加载贴图、保留
+  放置坐标并调用动作通过。独立桌宠样例位于 `build/examples/blue-adventurer-pet/`，可编辑
+  样例位于 `build/examples/blue-adventurer/`。
+- 重新构建编辑器和宿主、生成最终 ZIP，并在源码目录之外独立解压验证保存、重开、三种
+  导出和桌宠启动。`build/release-verification.json` 中 `errors: []`。源码的 `git diff --check` 通过。
+- 动作仍是正面刚性 FK 样例，不是逐方向行走动画或网格蒙皮。没有新增系统鼠标自动操作；
+  本轮实际窗口检查由 Godot 测试驱动，未扩展多屏和真实系统 DPI 验收范围。
+
+## 2026-11-23 灵犀、骨架预设、PSD 与托盘
+
+版本：0.1.1；Windows x86_64；Godot 4.7.2 stable；实际窗口使用 OpenGL Compatibility。
+
+| 验证 | 结果与证据 |
+| --- | --- |
+| 核心、创作与导出回归 | `tests/run_tests.gd`：75 项通过，0 失败 |
+| 部件交互回归 | `tests/part_interaction_test.gd`：98 项通过，0 失败 |
+| 逐帧像素回归 | `tests/pixel_frames_test.gd`：50 项通过，0 失败 |
+| 动作与关节回归 | `tests/animation_interaction_test.gd`：58 项通过，0 失败 |
+| 骨架、预设与 PSD 集成 | `tests/rig_import_test.gd`：无窗口 28 项通过，0 失败 |
+| PSD 解析 | `tools/psd/test_import.py`：2 个测试方法通过，覆盖 raw、RLE、ZIP、ZIP prediction 四种压缩及中文分组、偏移、透明度和隐藏图层 |
+| 实际窗口与托盘 | `tests/desktop_test.gd`：0 失败，涵盖透明渲染、工具窗口样式、托盘显隐、关闭到托盘、菜单恢复、拖动、缩放与退出清理 |
+| 工作区尺寸 | 960×640、1280×800、1920×1080 实际窗口截图中完整角色处于画布内，窗口改变尺寸后重新适配 |
+| Windows 构建与便携包 | 编辑器、桌宠宿主、原生 DLL 与冻结的 PSD 辅助程序均已构建；最终 ZIP 独立解压检查通过 |
+| 成品保存和导出 | 只使用解压后的 EXE 保存、重开并导出工程、Godot 包、桌宠；导出桌宠独立启动，`build/release-verification.json` 中 `errors: []` |
+| Godot 包集成 | 从成品生成的 Godot 工程完成首次资源导入；`tests/export_probe.gd` 实例化入口、保留放置坐标、加载贴图并调用招手，退出码 0 |
+
+骨架与导入检查包含：灵犀 11 部件与 9 个动作、自由结构不误判为人形、显式未分配部位
+不自动回退、中文左右侧识别、缺少父部位时保持装配位置、导入撤销重做、原始 PSD 随
+可编辑工程保存重开、运行包不携带原始 PSD，以及自定义预设按部位映射到不同部件 ID。
+导入映射弹窗的骨架切换与重复部位校验也通过测试。
+
+独立成品检查发现并修正了桌宠宿主遗漏 `taskbar.gd` 的导出清单问题，修正后重新导出、
+打包并重跑成品检查。PSD 辅助程序在源码目录外解析实际生成的 PSD，不依赖系统 Python。
+便携包同时包含编辑器和宿主所需的 `rigpop_windows.dll`，原生接口只接受本进程窗口句柄。
+
+主要复现命令：
+
+```powershell
+& './build/psd-venv/Scripts/python.exe' tools/psd/test_import.py
+& '<Godot 4.7.2 console>' --headless --path . --script tests/rig_import_test.gd
+& '<Godot 4.7.2 console>' --path . --script tests/desktop_test.gd -- --character '<已保存灵犀目录>/character.rigpop.json'
+& './tools/verify_package.ps1'
+```
+
+本轮日志为 `build/rig-import-regression.log`、`build/desktop-test.log`、
+`build/verify-current.log` 和 `build/exported-project-probe.log`。角色工作区和导入映射截图
+保存在 `tests/output/rig_410611/`，生成文件不纳入源码或发布包。
+
+本轮 Computer Use 已观察到实际角色工作区；用户按 Esc 中止后没有继续操作窗口。
+未把中止的界面操作记为完整人工验收。自动窗口测试通过不代表已覆盖多显示器、真实
+系统 DPI、其他物理电脑或长期运行。PSD 当前仅支持 8 位 RGB/RGBA；复杂混合、剪贴、
+组蒙版和效果按报告提示处理，尚无重导入合并。网格蒙皮、IK 和二级物理未参与本轮验收。
 
 ## 2026-11-18 交互、动作组合与多关节绑定
 
@@ -143,7 +210,7 @@
 - [150% UI 缩放](screenshots/dpi_150.png)
 - [桌宠透明帧缓冲](screenshots/desktop_window.png)
 
-## 验证边界
+## 2026-11-13 验证边界
 
 Windows Computer Use 原生连接不可用，已重试一次；截图和交互状态验证由 Godot 内部测试驱动完成。
 桌宠画面来自实际窗口的渲染缓冲，并检查透明 alpha；未以编辑器中的缩略预览代替它。
@@ -154,4 +221,25 @@ Windows Computer Use 原生连接不可用，已重试一次；截图和交互�
 
 受限执行环境中的无窗口 Godot 会报告无法读取系统证书，构建编辑器可能报告无法写入全局
 编辑器设置。这些环境消息未造成脚本检查、构建或应用自检失败；实际 OpenGL 验收日志不含脚本错误。
-PSD、物理与其他未接入模块没有参与验收，其状态见 docs/roadmap.md 的未完成清单。
+截至当日，PSD、物理与其他未接入模块没有参与验收；后续状态以本文较新的日期记录和
+docs/roadmap.md 为准。
+
+## 2026-11-23 Kiki 兽人立绘适配
+
+- 美术使用 Tyson Tan 的 Chibi Kiki II（Krita 吉祥物，CC BY-SA 4.0），保留原始透明 PNG、
+  来源摘要与许可。以完整立绘适配，不含独立四肢、耳朵和尾巴的骨骼动画。
+- `tests/kiki_test.gd` 实际 OpenGL 窗口：41 项通过，0 失败。覆盖默认角色、200×240 透明
+  素材、六个动作逐帧非空与不裁切、实际画面变化、三个编辑器尺寸、存取和三种导出的署名/许可。
+- 验证插画的平滑采样、切回像素角色的最近邻采样；游戏显示倍率为 0.75，不缩放碰撞体。
+  非数值、零和过大的倍率会被工程校验拒绝。未声明倍率的旧角色继续使用 2 倍。
+- 核心套件 `tests/run_tests.gd`：75 项通过；骨骼与 PSD 套件 `tests/rig_import_test.gd`：
+  28 项通过。`tests/desktop_test.gd` 使用 Kiki 的真实透明窗口：0 失败，包含托盘、拖动、
+  右键缩放、置顶、失焦释放与透明像素检查。
+- 本机报告：`build/kiki-verification.json`；实际渲染帧、编辑器与游戏截图在报告的 `output`
+  目录。`tools/art/review_kiki.py` 从这些实际帧生成 `build/previews/kiki-motion.gif`。
+- 修复独立桌宠从项目外工作目录启动时的原生库加载路径：构建、分发和用户导出保留
+  `platform/windows/bin/rigpop_windows.dll`。发布包验证增加真实窗口启动，避免无窗口模式
+  跳过托盘集成而漏检此问题。
+
+本次没有可用的图片生成工具；交付采用上述已有授权原画，不声称是 AI 生成或 RigPop 原创角色。
+悬浮和问候使用整体位移/旋转，不代表逐帧踏步或分部件动作已经完成。

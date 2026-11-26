@@ -23,6 +23,8 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 func _draw() -> void:
+	var smooth: bool = model.get("modules", {}).get("rigpop.art", {}).get("texture_filter", "nearest") == "linear"
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR if smooth else CanvasItem.TEXTURE_FILTER_NEAREST
 	var clip := Character.find_action(model, action_id)
 	var overlay := Character.find_action(model, overlay_id)
 	var transforms := Character.transforms(model, clip, frame, overlay, overlay_frame, layers)

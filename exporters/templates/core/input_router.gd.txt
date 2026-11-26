@@ -45,6 +45,9 @@ func feed(key: String, pressed: bool, now: float) -> Array[String]:
 			return commands
 		held[key] = now
 		long_fired.erase(key)
+		for b in bindings:
+			if b.key == key and b.gesture == "press":
+				commands.append(b.command)
 		if pending.has(key) and now - float(pending[key]) <= double_threshold:
 			for b in bindings:
 				if b.key == key and b.gesture == "double":
@@ -86,10 +89,10 @@ func advance(now: float) -> Array[String]:
 			long_fired[key] = true
 	return commands
 
-func movement() -> Vector2:
+func movement(held_before: float = INF) -> Vector2:
 	var result := Vector2.ZERO
 	for b in bindings:
-		if b.gesture != "hold" or not held.has(b.key):
+		if b.gesture != "hold" or not held.has(b.key) or float(held[b.key]) > held_before:
 			continue
 		match b.command:
 			"move_left": result.x -= 1

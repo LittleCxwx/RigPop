@@ -1,0 +1,1424 @@
+{
+  "format_version": 1,
+  "id": "template_kiki",
+  "name": "Kiki · Q版赛博松鼠",
+  "rig": "",
+  "parts": [
+    {
+      "id": "body",
+      "name": "Kiki 完整立绘",
+      "role": "body",
+      "parent": "",
+      "position": [
+        0,
+        -120
+      ],
+      "pivot": [
+        100.0,
+        120
+      ],
+      "rotation": 0,
+      "z": 0,
+      "visible": true,
+      "asset": "assets/body.png"
+    }
+  ],
+  "actions": [
+    {
+      "id": "idle",
+      "name": "悬浮待机",
+      "frames": 32,
+      "fps": 16,
+      "loop": true,
+      "overlay": false,
+      "priority": 0,
+      "conflict": "replace",
+      "lock_movement": false,
+      "tracks": {
+        "body": [
+          {
+            "frame": 0,
+            "position": [
+              0,
+              -0.0
+            ],
+            "rotation": 0.0
+          },
+          {
+            "frame": 1,
+            "position": [
+              0,
+              -0.041
+            ],
+            "rotation": 0.242
+          },
+          {
+            "frame": 2,
+            "position": [
+              0,
+              -0.162
+            ],
+            "rotation": 0.473
+          },
+          {
+            "frame": 3,
+            "position": [
+              0,
+              -0.358
+            ],
+            "rotation": 0.686
+          },
+          {
+            "frame": 4,
+            "position": [
+              0,
+              -0.622
+            ],
+            "rotation": 0.87
+          },
+          {
+            "frame": 5,
+            "position": [
+              0,
+              -0.942
+            ],
+            "rotation": 1.018
+          },
+          {
+            "frame": 6,
+            "position": [
+              0,
+              -1.305
+            ],
+            "rotation": 1.125
+          },
+          {
+            "frame": 7,
+            "position": [
+              0,
+              -1.697
+            ],
+            "rotation": 1.186
+          },
+          {
+            "frame": 8,
+            "position": [
+              0,
+              -2.101
+            ],
+            "rotation": 1.198
+          },
+          {
+            "frame": 9,
+            "position": [
+              0,
+              -2.501
+            ],
+            "rotation": 1.162
+          },
+          {
+            "frame": 10,
+            "position": [
+              0,
+              -2.881
+            ],
+            "rotation": 1.077
+          },
+          {
+            "frame": 11,
+            "position": [
+              0,
+              -3.224
+            ],
+            "rotation": 0.949
+          },
+          {
+            "frame": 12,
+            "position": [
+              0,
+              -3.518
+            ],
+            "rotation": 0.782
+          },
+          {
+            "frame": 13,
+            "position": [
+              0,
+              -3.749
+            ],
+            "rotation": 0.582
+          },
+          {
+            "frame": 14,
+            "position": [
+              0,
+              -3.908
+            ],
+            "rotation": 0.359
+          },
+          {
+            "frame": 15,
+            "position": [
+              0,
+              -3.99
+            ],
+            "rotation": 0.121
+          },
+          {
+            "frame": 16,
+            "position": [
+              0,
+              -3.99
+            ],
+            "rotation": -0.121
+          },
+          {
+            "frame": 17,
+            "position": [
+              0,
+              -3.908
+            ],
+            "rotation": -0.359
+          },
+          {
+            "frame": 18,
+            "position": [
+              0,
+              -3.749
+            ],
+            "rotation": -0.582
+          },
+          {
+            "frame": 19,
+            "position": [
+              0,
+              -3.518
+            ],
+            "rotation": -0.782
+          },
+          {
+            "frame": 20,
+            "position": [
+              0,
+              -3.224
+            ],
+            "rotation": -0.949
+          },
+          {
+            "frame": 21,
+            "position": [
+              0,
+              -2.881
+            ],
+            "rotation": -1.077
+          },
+          {
+            "frame": 22,
+            "position": [
+              0,
+              -2.501
+            ],
+            "rotation": -1.162
+          },
+          {
+            "frame": 23,
+            "position": [
+              0,
+              -2.101
+            ],
+            "rotation": -1.198
+          },
+          {
+            "frame": 24,
+            "position": [
+              0,
+              -1.697
+            ],
+            "rotation": -1.186
+          },
+          {
+            "frame": 25,
+            "position": [
+              0,
+              -1.305
+            ],
+            "rotation": -1.125
+          },
+          {
+            "frame": 26,
+            "position": [
+              0,
+              -0.942
+            ],
+            "rotation": -1.018
+          },
+          {
+            "frame": 27,
+            "position": [
+              0,
+              -0.622
+            ],
+            "rotation": -0.87
+          },
+          {
+            "frame": 28,
+            "position": [
+              0,
+              -0.358
+            ],
+            "rotation": -0.686
+          },
+          {
+            "frame": 29,
+            "position": [
+              0,
+              -0.162
+            ],
+            "rotation": -0.473
+          },
+          {
+            "frame": 30,
+            "position": [
+              0,
+              -0.041
+            ],
+            "rotation": -0.242
+          },
+          {
+            "frame": 31,
+            "position": [
+              0,
+              -0.0
+            ],
+            "rotation": -0.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "walk",
+      "name": "漂浮移动",
+      "frames": 24,
+      "fps": 16,
+      "loop": true,
+      "overlay": false,
+      "priority": 0,
+      "conflict": "replace",
+      "lock_movement": false,
+      "tracks": {
+        "body": [
+          {
+            "frame": 0,
+            "position": [
+              0,
+              -0.0
+            ],
+            "rotation": 0.0
+          },
+          {
+            "frame": 1,
+            "position": [
+              0,
+              -0.111
+            ],
+            "rotation": 0.54
+          },
+          {
+            "frame": 2,
+            "position": [
+              0,
+              -0.437
+            ],
+            "rotation": 1.039
+          },
+          {
+            "frame": 3,
+            "position": [
+              0,
+              -0.952
+            ],
+            "rotation": 1.462
+          },
+          {
+            "frame": 4,
+            "position": [
+              0,
+              -1.62
+            ],
+            "rotation": 1.776
+          },
+          {
+            "frame": 5,
+            "position": [
+              0,
+              -2.39
+            ],
+            "rotation": 1.958
+          },
+          {
+            "frame": 6,
+            "position": [
+              0,
+              -3.205
+            ],
+            "rotation": 1.995
+          },
+          {
+            "frame": 7,
+            "position": [
+              0,
+              -4.005
+            ],
+            "rotation": 1.885
+          },
+          {
+            "frame": 8,
+            "position": [
+              0,
+              -4.73
+            ],
+            "rotation": 1.634
+          },
+          {
+            "frame": 9,
+            "position": [
+              0,
+              -5.327
+            ],
+            "rotation": 1.262
+          },
+          {
+            "frame": 10,
+            "position": [
+              0,
+              -5.752
+            ],
+            "rotation": 0.797
+          },
+          {
+            "frame": 11,
+            "position": [
+              0,
+              -5.972
+            ],
+            "rotation": 0.272
+          },
+          {
+            "frame": 12,
+            "position": [
+              0,
+              -5.972
+            ],
+            "rotation": -0.272
+          },
+          {
+            "frame": 13,
+            "position": [
+              0,
+              -5.752
+            ],
+            "rotation": -0.797
+          },
+          {
+            "frame": 14,
+            "position": [
+              0,
+              -5.327
+            ],
+            "rotation": -1.262
+          },
+          {
+            "frame": 15,
+            "position": [
+              0,
+              -4.73
+            ],
+            "rotation": -1.634
+          },
+          {
+            "frame": 16,
+            "position": [
+              0,
+              -4.005
+            ],
+            "rotation": -1.885
+          },
+          {
+            "frame": 17,
+            "position": [
+              0,
+              -3.205
+            ],
+            "rotation": -1.995
+          },
+          {
+            "frame": 18,
+            "position": [
+              0,
+              -2.39
+            ],
+            "rotation": -1.958
+          },
+          {
+            "frame": 19,
+            "position": [
+              0,
+              -1.62
+            ],
+            "rotation": -1.776
+          },
+          {
+            "frame": 20,
+            "position": [
+              0,
+              -0.952
+            ],
+            "rotation": -1.462
+          },
+          {
+            "frame": 21,
+            "position": [
+              0,
+              -0.437
+            ],
+            "rotation": -1.039
+          },
+          {
+            "frame": 22,
+            "position": [
+              0,
+              -0.111
+            ],
+            "rotation": -0.54
+          },
+          {
+            "frame": 23,
+            "position": [
+              0,
+              -0.0
+            ],
+            "rotation": -0.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "run",
+      "name": "轻快漂浮",
+      "frames": 20,
+      "fps": 16,
+      "loop": true,
+      "overlay": false,
+      "priority": 0,
+      "conflict": "replace",
+      "lock_movement": false,
+      "tracks": {
+        "body": [
+          {
+            "frame": 0,
+            "position": [
+              0.0,
+              -0.0
+            ],
+            "rotation": 0.0
+          },
+          {
+            "frame": 1,
+            "position": [
+              0.487,
+              -0.217
+            ],
+            "rotation": 0.974
+          },
+          {
+            "frame": 2,
+            "position": [
+              0.921,
+              -0.843
+            ],
+            "rotation": 1.843
+          },
+          {
+            "frame": 3,
+            "position": [
+              1.256,
+              -1.812
+            ],
+            "rotation": 2.511
+          },
+          {
+            "frame": 4,
+            "position": [
+              1.454,
+              -3.018
+            ],
+            "rotation": 2.908
+          },
+          {
+            "frame": 5,
+            "position": [
+              1.495,
+              -4.33
+            ],
+            "rotation": 2.99
+          },
+          {
+            "frame": 6,
+            "position": [
+              1.374,
+              -5.607
+            ],
+            "rotation": 2.747
+          },
+          {
+            "frame": 7,
+            "position": [
+              1.104,
+              -6.709
+            ],
+            "rotation": 2.207
+          },
+          {
+            "frame": 8,
+            "position": [
+              0.714,
+              -7.518
+            ],
+            "rotation": 1.428
+          },
+          {
+            "frame": 9,
+            "position": [
+              0.247,
+              -7.945
+            ],
+            "rotation": 0.494
+          },
+          {
+            "frame": 10,
+            "position": [
+              -0.247,
+              -7.945
+            ],
+            "rotation": -0.494
+          },
+          {
+            "frame": 11,
+            "position": [
+              -0.714,
+              -7.518
+            ],
+            "rotation": -1.428
+          },
+          {
+            "frame": 12,
+            "position": [
+              -1.104,
+              -6.709
+            ],
+            "rotation": -2.207
+          },
+          {
+            "frame": 13,
+            "position": [
+              -1.374,
+              -5.607
+            ],
+            "rotation": -2.747
+          },
+          {
+            "frame": 14,
+            "position": [
+              -1.495,
+              -4.33
+            ],
+            "rotation": -2.99
+          },
+          {
+            "frame": 15,
+            "position": [
+              -1.454,
+              -3.018
+            ],
+            "rotation": -2.908
+          },
+          {
+            "frame": 16,
+            "position": [
+              -1.256,
+              -1.812
+            ],
+            "rotation": -2.511
+          },
+          {
+            "frame": 17,
+            "position": [
+              -0.921,
+              -0.843
+            ],
+            "rotation": -1.843
+          },
+          {
+            "frame": 18,
+            "position": [
+              -0.487,
+              -0.217
+            ],
+            "rotation": -0.974
+          },
+          {
+            "frame": 19,
+            "position": [
+              -0.0,
+              -0.0
+            ],
+            "rotation": -0.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "wave",
+      "name": "摇摆问候",
+      "frames": 32,
+      "fps": 16,
+      "loop": false,
+      "overlay": true,
+      "priority": 0,
+      "conflict": "replace",
+      "lock_movement": false,
+      "tracks": {
+        "body": [
+          {
+            "frame": 0,
+            "position": [
+              0,
+              -0.0
+            ],
+            "rotation": 0.0
+          },
+          {
+            "frame": 1,
+            "position": [
+              0,
+              -0.031
+            ],
+            "rotation": 0.173
+          },
+          {
+            "frame": 2,
+            "position": [
+              0,
+              -0.122
+            ],
+            "rotation": 0.566
+          },
+          {
+            "frame": 3,
+            "position": [
+              0,
+              -0.269
+            ],
+            "rotation": 0.869
+          },
+          {
+            "frame": 4,
+            "position": [
+              0,
+              -0.467
+            ],
+            "rotation": 0.771
+          },
+          {
+            "frame": 5,
+            "position": [
+              0,
+              -0.707
+            ],
+            "rotation": 0.147
+          },
+          {
+            "frame": 6,
+            "position": [
+              0,
+              -0.979
+            ],
+            "rotation": -0.832
+          },
+          {
+            "frame": 7,
+            "position": [
+              0,
+              -1.273
+            ],
+            "rotation": -1.754
+          },
+          {
+            "frame": 8,
+            "position": [
+              0,
+              -1.576
+            ],
+            "rotation": -2.149
+          },
+          {
+            "frame": 9,
+            "position": [
+              0,
+              -1.876
+            ],
+            "rotation": -1.719
+          },
+          {
+            "frame": 10,
+            "position": [
+              0,
+              -2.161
+            ],
+            "rotation": -0.512
+          },
+          {
+            "frame": 11,
+            "position": [
+              0,
+              -2.418
+            ],
+            "rotation": 1.062
+          },
+          {
+            "frame": 12,
+            "position": [
+              0,
+              -2.638
+            ],
+            "rotation": 2.387
+          },
+          {
+            "frame": 13,
+            "position": [
+              0,
+              -2.812
+            ],
+            "rotation": 2.901
+          },
+          {
+            "frame": 14,
+            "position": [
+              0,
+              -2.931
+            ],
+            "rotation": 2.345
+          },
+          {
+            "frame": 15,
+            "position": [
+              0,
+              -2.992
+            ],
+            "rotation": 0.897
+          },
+          {
+            "frame": 16,
+            "position": [
+              0,
+              -2.992
+            ],
+            "rotation": -0.897
+          },
+          {
+            "frame": 17,
+            "position": [
+              0,
+              -2.931
+            ],
+            "rotation": -2.345
+          },
+          {
+            "frame": 18,
+            "position": [
+              0,
+              -2.812
+            ],
+            "rotation": -2.901
+          },
+          {
+            "frame": 19,
+            "position": [
+              0,
+              -2.638
+            ],
+            "rotation": -2.387
+          },
+          {
+            "frame": 20,
+            "position": [
+              0,
+              -2.418
+            ],
+            "rotation": -1.062
+          },
+          {
+            "frame": 21,
+            "position": [
+              0,
+              -2.161
+            ],
+            "rotation": 0.512
+          },
+          {
+            "frame": 22,
+            "position": [
+              0,
+              -1.876
+            ],
+            "rotation": 1.719
+          },
+          {
+            "frame": 23,
+            "position": [
+              0,
+              -1.576
+            ],
+            "rotation": 2.149
+          },
+          {
+            "frame": 24,
+            "position": [
+              0,
+              -1.273
+            ],
+            "rotation": 1.754
+          },
+          {
+            "frame": 25,
+            "position": [
+              0,
+              -0.979
+            ],
+            "rotation": 0.832
+          },
+          {
+            "frame": 26,
+            "position": [
+              0,
+              -0.707
+            ],
+            "rotation": -0.147
+          },
+          {
+            "frame": 27,
+            "position": [
+              0,
+              -0.467
+            ],
+            "rotation": -0.771
+          },
+          {
+            "frame": 28,
+            "position": [
+              0,
+              -0.269
+            ],
+            "rotation": -0.869
+          },
+          {
+            "frame": 29,
+            "position": [
+              0,
+              -0.122
+            ],
+            "rotation": -0.566
+          },
+          {
+            "frame": 30,
+            "position": [
+              0,
+              -0.031
+            ],
+            "rotation": -0.173
+          },
+          {
+            "frame": 31,
+            "position": [
+              0,
+              -0.0
+            ],
+            "rotation": -0.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "nod",
+      "name": "歪头致意",
+      "frames": 24,
+      "fps": 16,
+      "loop": false,
+      "overlay": true,
+      "priority": 0,
+      "conflict": "replace",
+      "lock_movement": false,
+      "tracks": {
+        "body": [
+          {
+            "frame": 0,
+            "position": [
+              0,
+              0.0
+            ],
+            "rotation": -0.0
+          },
+          {
+            "frame": 1,
+            "position": [
+              0,
+              0.037
+            ],
+            "rotation": -0.074
+          },
+          {
+            "frame": 2,
+            "position": [
+              0,
+              0.146
+            ],
+            "rotation": -0.291
+          },
+          {
+            "frame": 3,
+            "position": [
+              0,
+              0.317
+            ],
+            "rotation": -0.635
+          },
+          {
+            "frame": 4,
+            "position": [
+              0,
+              0.54
+            ],
+            "rotation": -1.08
+          },
+          {
+            "frame": 5,
+            "position": [
+              0,
+              0.797
+            ],
+            "rotation": -1.593
+          },
+          {
+            "frame": 6,
+            "position": [
+              0,
+              1.068
+            ],
+            "rotation": -2.136
+          },
+          {
+            "frame": 7,
+            "position": [
+              0,
+              1.335
+            ],
+            "rotation": -2.67
+          },
+          {
+            "frame": 8,
+            "position": [
+              0,
+              1.577
+            ],
+            "rotation": -3.153
+          },
+          {
+            "frame": 9,
+            "position": [
+              0,
+              1.776
+            ],
+            "rotation": -3.551
+          },
+          {
+            "frame": 10,
+            "position": [
+              0,
+              1.917
+            ],
+            "rotation": -3.834
+          },
+          {
+            "frame": 11,
+            "position": [
+              0,
+              1.991
+            ],
+            "rotation": -3.981
+          },
+          {
+            "frame": 12,
+            "position": [
+              0,
+              1.991
+            ],
+            "rotation": -3.981
+          },
+          {
+            "frame": 13,
+            "position": [
+              0,
+              1.917
+            ],
+            "rotation": -3.834
+          },
+          {
+            "frame": 14,
+            "position": [
+              0,
+              1.776
+            ],
+            "rotation": -3.551
+          },
+          {
+            "frame": 15,
+            "position": [
+              0,
+              1.577
+            ],
+            "rotation": -3.153
+          },
+          {
+            "frame": 16,
+            "position": [
+              0,
+              1.335
+            ],
+            "rotation": -2.67
+          },
+          {
+            "frame": 17,
+            "position": [
+              0,
+              1.068
+            ],
+            "rotation": -2.136
+          },
+          {
+            "frame": 18,
+            "position": [
+              0,
+              0.797
+            ],
+            "rotation": -1.593
+          },
+          {
+            "frame": 19,
+            "position": [
+              0,
+              0.54
+            ],
+            "rotation": -1.08
+          },
+          {
+            "frame": 20,
+            "position": [
+              0,
+              0.317
+            ],
+            "rotation": -0.635
+          },
+          {
+            "frame": 21,
+            "position": [
+              0,
+              0.146
+            ],
+            "rotation": -0.291
+          },
+          {
+            "frame": 22,
+            "position": [
+              0,
+              0.037
+            ],
+            "rotation": -0.074
+          },
+          {
+            "frame": 23,
+            "position": [
+              0,
+              0.0
+            ],
+            "rotation": -0.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "jump",
+      "name": "跳跃",
+      "frames": 24,
+      "fps": 16,
+      "loop": false,
+      "overlay": false,
+      "priority": 0,
+      "conflict": "replace",
+      "lock_movement": false,
+      "tracks": {
+        "body": [
+          {
+            "frame": 0,
+            "position": [
+              0,
+              -0.0
+            ],
+            "rotation": -0.0
+          },
+          {
+            "frame": 1,
+            "position": [
+              0,
+              -0.371
+            ],
+            "rotation": -0.809
+          },
+          {
+            "frame": 2,
+            "position": [
+              0,
+              -1.456
+            ],
+            "rotation": -1.559
+          },
+          {
+            "frame": 3,
+            "position": [
+              0,
+              -3.174
+            ],
+            "rotation": -2.193
+          },
+          {
+            "frame": 4,
+            "position": [
+              0,
+              -5.399
+            ],
+            "rotation": -2.664
+          },
+          {
+            "frame": 5,
+            "position": [
+              0,
+              -7.965
+            ],
+            "rotation": -2.937
+          },
+          {
+            "frame": 6,
+            "position": [
+              0,
+              -10.682
+            ],
+            "rotation": -2.993
+          },
+          {
+            "frame": 7,
+            "position": [
+              0,
+              -13.349
+            ],
+            "rotation": -2.827
+          },
+          {
+            "frame": 8,
+            "position": [
+              0,
+              -15.767
+            ],
+            "rotation": -2.451
+          },
+          {
+            "frame": 9,
+            "position": [
+              0,
+              -17.757
+            ],
+            "rotation": -1.893
+          },
+          {
+            "frame": 10,
+            "position": [
+              0,
+              -19.172
+            ],
+            "rotation": -1.195
+          },
+          {
+            "frame": 11,
+            "position": [
+              0,
+              -19.907
+            ],
+            "rotation": -0.408
+          },
+          {
+            "frame": 12,
+            "position": [
+              0,
+              -19.907
+            ],
+            "rotation": 0.408
+          },
+          {
+            "frame": 13,
+            "position": [
+              0,
+              -19.172
+            ],
+            "rotation": 1.195
+          },
+          {
+            "frame": 14,
+            "position": [
+              0,
+              -17.757
+            ],
+            "rotation": 1.893
+          },
+          {
+            "frame": 15,
+            "position": [
+              0,
+              -15.767
+            ],
+            "rotation": 2.451
+          },
+          {
+            "frame": 16,
+            "position": [
+              0,
+              -13.349
+            ],
+            "rotation": 2.827
+          },
+          {
+            "frame": 17,
+            "position": [
+              0,
+              -10.682
+            ],
+            "rotation": 2.993
+          },
+          {
+            "frame": 18,
+            "position": [
+              0,
+              -7.965
+            ],
+            "rotation": 2.937
+          },
+          {
+            "frame": 19,
+            "position": [
+              0,
+              -5.399
+            ],
+            "rotation": 2.664
+          },
+          {
+            "frame": 20,
+            "position": [
+              0,
+              -3.174
+            ],
+            "rotation": 2.193
+          },
+          {
+            "frame": 21,
+            "position": [
+              0,
+              -1.456
+            ],
+            "rotation": 1.559
+          },
+          {
+            "frame": 22,
+            "position": [
+              0,
+              -0.371
+            ],
+            "rotation": 0.809
+          },
+          {
+            "frame": 23,
+            "position": [
+              0,
+              -0.0
+            ],
+            "rotation": 0.0
+          }
+        ]
+      }
+    }
+  ],
+  "palette": [
+    "ffffff",
+    "cce5fa",
+    "a9f5fc",
+    "ed93b5",
+    "bf5182",
+    "303638"
+  ],
+  "bindings": [
+    {
+      "key": "A",
+      "gesture": "hold",
+      "command": "move_left"
+    },
+    {
+      "key": "D",
+      "gesture": "hold",
+      "command": "move_right"
+    },
+    {
+      "key": "W",
+      "gesture": "hold",
+      "command": "move_up"
+    },
+    {
+      "key": "S",
+      "gesture": "hold",
+      "command": "move_down"
+    },
+    {
+      "key": "Space",
+      "gesture": "tap",
+      "command": "wave"
+    }
+  ],
+  "game": {
+    "speed": 115,
+    "collision_radius": 16,
+    "visual_scale": 0.75
+  },
+  "desktop": {
+    "scale": 1,
+    "always_on_top": true,
+    "wander": false
+  },
+  "modules": {
+    "rigpop.art": {
+      "source": "Tyson Tan / Chibi Kiki II",
+      "author": "Tyson Tan",
+      "art_source": "existing",
+      "license": "CC-BY-SA-4.0",
+      "url": "https://krita.org/en/about/mascot/",
+      "image_url": "https://krita.org/images/pages/electrichearts_20200928A_kiki_a_trans_EN.png",
+      "texture_filter": "linear",
+      "animation": "whole-illustration transforms",
+      "changes": "Figure isolated from lettering and sparkles, cropped and resized; root motion authored in RigPop."
+    }
+  }
+}

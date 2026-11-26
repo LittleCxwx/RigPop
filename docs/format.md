@@ -41,9 +41,24 @@
 历史使用内存快照，最多 60 次。笔画与部件拖动成组。它不是跨会话的版本管理系统。
 模型中不存试演状态。未知模块只保留配置，目标能力必须由实际处理器执行。
 
+`game.visual_scale` 可选，范围 0.1～8，缺省为 2；只缩放游戏中显示的角色，不修改碰撞体。
+`modules["rigpop.art"].texture_filter` 为 `linear` 时对插画使用平滑采样，其他值及缺省为
+`nearest`，保留像素素材的清晰边缘。来源、作者、许可证与完整立绘动画说明也可保存在该模块。
+
 Godot 包包含 `addons/rigpop_runtime/` 中的源码与 `characters/<ID>/` 中的数据/入口场景。
 无全局类或自动加载单例，共用目录按运行 API 版本复用。入口的 `character_file` 为可导出的场景属性。
 地图实例的位置、队伍与用户脚本应保留在地图自己的节点或场景中。
 
 Windows 桌宠使用预构建宿主与外部 JSON/PNG，不包含编辑 UI、PSD 解析器或游戏控制器。
 用户导出无需调用 Godot 编辑器。`RigPopPet.exe` 与 `.pck` 必须保留配套文件名。
+
+`rig` 与 `parts[].role` 是格式 1 的可选字段。内置骨架为 `rigpop.quadruped.v1` 与
+`rigpop.biped.v1`；角色中保存的动作仍按部件 ID 引用。复用预设按 `role:` 前缀记录轨道，
+套用时映射为目标部件 ID；位置偏移根据 `modules["rigpop.rig"].motion_scale` 换算。
+
+PSD 来源位于 `modules["import.psd"]`：`source` 是来源文件名，`source_file` 是工程内
+`sources/<内容摘要>.psd` 的相对路径，`layers` 记录原始图层键、部件 ID 与骨骼角色。
+JSON/PNG/PSD 构成完整可编辑工程。普通运行导出移除 `source_file` 并排除 PSD，保留来源映射。
+Windows 原生扩展 `rigpop_windows.dll` 是桌宠运行依赖，应与 EXE 一起分发。
+保留 `platform/windows/bin/rigpop_windows.dll` 的相对层级；扩展描述文件按此路径加载原生库，
+不能只保留导出器同时复制到 EXE 旁边的库副本。

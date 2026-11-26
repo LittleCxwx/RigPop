@@ -1,0 +1,253 @@
+{
+  "format_version": 1,
+  "id": "template_adventurer",
+  "name": "蓝衣冒险家",
+  "rig": "rigpop.biped.v1",
+  "parts": [
+    {
+      "id": "body",
+      "name": "躯干",
+      "role": "body",
+      "parent": "",
+      "position": [
+        0.0,
+        -51.9
+      ],
+      "pivot": [
+        38.0,
+        62.1
+      ],
+      "rotation": 0,
+      "z": 2,
+      "visible": true,
+      "asset": "assets/body.png"
+    },
+    {
+      "id": "head",
+      "name": "头部",
+      "role": "head",
+      "parent": "body",
+      "position": [
+        3.7,
+        -55.7
+      ],
+      "pivot": [
+        54.7,
+        68.4
+      ],
+      "rotation": 0,
+      "z": 5,
+      "visible": true,
+      "asset": "assets/head.png"
+    },
+    {
+      "id": "hair",
+      "name": "后发",
+      "role": "hair",
+      "parent": "head",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "pivot": [
+        51.7,
+        83.4
+      ],
+      "rotation": 0,
+      "z": -3,
+      "visible": true,
+      "asset": "assets/hair.png"
+    },
+    {
+      "id": "arm_l",
+      "name": "左臂",
+      "role": "arm_l",
+      "parent": "body",
+      "position": [
+        -35.5,
+        -32.5
+      ],
+      "pivot": [
+        28.5,
+        10.6
+      ],
+      "rotation": 0,
+      "z": 0,
+      "visible": true,
+      "asset": "assets/arm_l.png"
+    },
+    {
+      "id": "arm_r",
+      "name": "右臂",
+      "role": "arm_r",
+      "parent": "body",
+      "position": [
+        35.5,
+        -32.5
+      ],
+      "pivot": [
+        12.5,
+        10.6
+      ],
+      "rotation": 0,
+      "z": 1,
+      "visible": true,
+      "asset": "assets/arm_r.png"
+    },
+    {
+      "id": "hand_l",
+      "name": "左手",
+      "role": "hand_l",
+      "parent": "arm_l",
+      "position": [
+        -17.2,
+        44.2
+      ],
+      "pivot": [
+        10.3,
+        6.8
+      ],
+      "rotation": 0,
+      "z": 3,
+      "visible": true,
+      "asset": "assets/hand_l.png"
+    },
+    {
+      "id": "hand_r",
+      "name": "右手",
+      "role": "hand_r",
+      "parent": "arm_r",
+      "position": [
+        17.2,
+        44.2
+      ],
+      "pivot": [
+        20.7,
+        6.8
+      ],
+      "rotation": 0,
+      "z": 4,
+      "visible": true,
+      "asset": "assets/hand_r.png"
+    },
+    {
+      "id": "leg_l",
+      "name": "左腿",
+      "role": "leg_l",
+      "parent": "body",
+      "position": [
+        -16.0,
+        5.8
+      ],
+      "pivot": [
+        22.0,
+        11.9
+      ],
+      "rotation": 0,
+      "z": -2,
+      "visible": true,
+      "asset": "assets/leg_l.png"
+    },
+    {
+      "id": "leg_r",
+      "name": "右腿",
+      "role": "leg_r",
+      "parent": "body",
+      "position": [
+        16.0,
+        5.8
+      ],
+      "pivot": [
+        14.0,
+        11.9
+      ],
+      "rotation": 0,
+      "z": -1,
+      "visible": true,
+      "asset": "assets/leg_r.png"
+    }
+  ],
+  "actions": [
+    {
+      "id": "idle",
+      "name": "Idle",
+      "frames": 8,
+      "fps": 8,
+      "loop": true,
+      "overlay": false,
+      "priority": 0,
+      "conflict": "replace",
+      "lock_movement": false,
+      "tracks": {}
+    },
+    {
+      "id": "wave",
+      "name": "Wave",
+      "frames": 8,
+      "fps": 8,
+      "loop": false,
+      "overlay": true,
+      "priority": 0,
+      "conflict": "replace",
+      "lock_movement": false,
+      "tracks": {}
+    }
+  ],
+  "palette": [
+    "f4cd9f",
+    "d99a70",
+    "c7845d",
+    "a56247",
+    "5e9cb5",
+    "397b99",
+    "80593e",
+    "f8f4df"
+  ],
+  "bindings": [
+    {
+      "key": "A",
+      "gesture": "hold",
+      "command": "move_left"
+    },
+    {
+      "key": "D",
+      "gesture": "hold",
+      "command": "move_right"
+    },
+    {
+      "key": "W",
+      "gesture": "hold",
+      "command": "move_up"
+    },
+    {
+      "key": "S",
+      "gesture": "hold",
+      "command": "move_down"
+    },
+    {
+      "key": "Space",
+      "gesture": "tap",
+      "command": "wave"
+    }
+  ],
+  "game": {
+    "speed": 115,
+    "collision_radius": 16
+  },
+  "desktop": {
+    "scale": 1,
+    "always_on_top": true,
+    "wander": false
+  },
+  "modules": {
+    "rigpop.rig": {
+      "motion_scale": 2
+    },
+    "rigpop.art": {
+      "source": "Kenney Toon Characters / Female adventurer",
+      "license": "CC0-1.0",
+      "url": "https://kenney.nl/assets/toon-characters",
+      "art_source": "existing"
+    }
+  }
+}

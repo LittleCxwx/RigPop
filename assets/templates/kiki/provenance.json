@@ -1,0 +1,32 @@
+{
+  "art_source": "existing",
+  "route": "Krita official mascot gallery",
+  "author": "Tyson Tan",
+  "title": "Chibi Kiki II (2019 Sketch, 2025 Cleanup)",
+  "license": "CC-BY-SA-4.0",
+  "source_url": "https://krita.org/images/pages/electrichearts_20200928A_kiki_a_trans_EN.png",
+  "license_source": "https://krita.org/en/about/mascot/",
+  "source_sha256": "8fb7e862b210cdb9592ebb98f3cc44c4fd825262ef9a759affa95f359cf55e7b",
+  "source_dimensions": [
+    6464,
+    8001
+  ],
+  "figure_bounds": [
+    451,
+    1303,
+    5231,
+    7032
+  ],
+  "master_dimensions": [
+    854,
+    1024
+  ],
+  "runtime_dimensions": [
+    200,
+    240
+  ],
+  "alpha_source": "original native transparency",
+  "component_count": 31,
+  "animation": "whole-illustration transforms, not articulated limb animation",
+  "changes": "Figure isolated from lettering and sparkles, cropped and resized; root motion authored in RigPop."
+}

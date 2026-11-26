@@ -25,7 +25,7 @@ func affected_parts(clip: Dictionary) -> Dictionary:
 		if not changed: break
 	return result
 
-func play(id: String) -> bool:
+func play(id: String, max_duration: float = INF) -> bool:
 	var clip := Character.find_action(model, id)
 	if clip.is_empty(): return false
 	var parts := affected_parts(clip)
@@ -39,12 +39,14 @@ func play(id: String) -> bool:
 			return false
 		replaced.append(current)
 	for current in replaced: active.erase(current)
-	active.append({"clip": clip, "clock": 0.0, "parts": parts})
+	var duration := float(clip.frames) / maxf(1, float(clip.fps))
+	active.append({"clip": clip, "clock": 0.0, "parts": parts,
+		"speed": maxf(1.0, duration / maxf(0.01, max_duration))})
 	return true
 
 func advance(delta: float) -> void:
 	for i in range(active.size() - 1, -1, -1):
-		active[i].clock += delta
+		active[i].clock += delta * float(active[i].speed)
 		var clip: Dictionary = active[i].clip
 		if float(active[i].clock) >= float(clip.frames) / maxf(1, float(clip.fps)):
 			active.remove_at(i)

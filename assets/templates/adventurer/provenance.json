@@ -1,0 +1,142 @@
+{
+  "art_source": "existing",
+  "route": "Kenney CC0 original PNG cutouts",
+  "model": null,
+  "source_sha256": "876d3b21666b77c1f9f1e50795738b30b15216166a65757fe43dd44290cee85e",
+  "canvas": [
+    192,
+    256
+  ],
+  "root": [
+    96,
+    256
+  ],
+  "parts": {
+    "hair": {
+      "anchor": [
+        99.7,
+        148.4
+      ],
+      "position": [
+        48,
+        65
+      ],
+      "size": [
+        100,
+        131
+      ]
+    },
+    "leg_r": {
+      "anchor": [
+        112.0,
+        209.9
+      ],
+      "position": [
+        98,
+        198
+      ],
+      "size": [
+        36,
+        58
+      ]
+    },
+    "leg_l": {
+      "anchor": [
+        80.0,
+        209.9
+      ],
+      "position": [
+        58,
+        198
+      ],
+      "size": [
+        36,
+        58
+      ]
+    },
+    "arm_r": {
+      "anchor": [
+        131.5,
+        171.6
+      ],
+      "position": [
+        119,
+        161
+      ],
+      "size": [
+        40,
+        60
+      ]
+    },
+    "arm_l": {
+      "anchor": [
+        60.5,
+        171.6
+      ],
+      "position": [
+        32,
+        161
+      ],
+      "size": [
+        40,
+        60
+      ]
+    },
+    "body": {
+      "anchor": [
+        96.0,
+        204.1
+      ],
+      "position": [
+        58,
+        142
+      ],
+      "size": [
+        74,
+        88
+      ]
+    },
+    "hand_r": {
+      "anchor": [
+        148.7,
+        215.8
+      ],
+      "position": [
+        128,
+        209
+      ],
+      "size": [
+        30,
+        34
+      ]
+    },
+    "hand_l": {
+      "anchor": [
+        43.3,
+        215.8
+      ],
+      "position": [
+        33,
+        209
+      ],
+      "size": [
+        30,
+        34
+      ]
+    },
+    "head": {
+      "anchor": [
+        99.7,
+        148.4
+      ],
+      "position": [
+        45,
+        80
+      ],
+      "size": [
+        106,
+        84
+      ]
+    }
+  }
+}

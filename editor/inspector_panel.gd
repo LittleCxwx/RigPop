@@ -1,6 +1,7 @@
 extends RefCounted
 
 const Character = preload("res://core/character.gd")
+const Rig = preload("res://core/rig.gd")
 const ThemeKit = preload("res://editor/theme.gd")
 
 var app: Control
@@ -18,6 +19,16 @@ func render() -> void:
 	app.name_field(app.inspector, app.doc.model.name, func(text: String) -> void:
 		app.edit("重命名角色", func() -> void: app.doc.model.name = text)
 		app.refresh_library())
+	if app.mode == 0:
+		var rig_picker := OptionButton.new()
+		rig_picker.add_item("自由结构")
+		rig_picker.set_item_metadata(0, "")
+		for rig in Rig.SUPPORTED:
+			rig_picker.add_item(Rig.rig_name(rig))
+			rig_picker.set_item_metadata(rig_picker.item_count - 1, rig)
+			if Rig.detect(app.doc.model) == rig: rig_picker.select(rig_picker.item_count - 1)
+		rig_picker.item_selected.connect(func(i: int) -> void: app.set_rig(str(rig_picker.get_item_metadata(i))))
+		app.inspector.add_child(rig_picker)
 
 	if app.mode == 2:
 		game_inspector()
@@ -43,6 +54,18 @@ func part_inspector(p: Dictionary) -> void:
 	app.name_field(app.inspector, p.name, func(text: String) -> void:
 		app.edit("重命名部件", func() -> void: p.name = text)
 		app.rebuild_tree())
+	var rig := Rig.detect(app.doc.model)
+	if not rig.is_empty():
+		var role_picker := OptionButton.new()
+		role_picker.add_item("普通部件 · 不参与动作匹配")
+		role_picker.set_item_metadata(0, "")
+		role_picker.fit_to_longest_item = false
+		for role in Rig.roles(rig):
+			role_picker.add_item(Rig.role_title(role))
+			role_picker.set_item_metadata(role_picker.item_count - 1, role)
+			if p.get("role", "") == role: role_picker.select(role_picker.item_count - 1)
+		role_picker.item_selected.connect(func(i: int) -> void: app.set_part_role(str(p.id), str(role_picker.get_item_metadata(i))))
+		app.inspector.add_child(role_picker)
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
@@ -136,6 +159,7 @@ func part_inspector(p: Dictionary) -> void:
 		app.inspector.add_child(conflict)
 		app.check_field(app.inspector, "播放时禁止移动", bool(clip.get("lock_movement", false)), func(v: bool) -> void:
 			app.edit("修改动作移动限制", func() -> void: clip.lock_movement = v))
+		app.action_row(app.inspector, "存为骨骼预设", "save", app.save_action_as_preset)
 
 func pixel_inspector(p: Dictionary) -> void:
 	rule()
@@ -226,6 +250,9 @@ func pixel_inspector(p: Dictionary) -> void:
 func game_inspector() -> void:
 	rule()
 	section("游戏场景")
+	app.number_field(app.inspector, "显示倍率", float(app.doc.model.game.get("visual_scale", 2.0)), 0.1, 8, 0.05, func(v: float) -> void:
+		app.edit("修改游戏显示倍率", func() -> void: app.doc.model.game.visual_scale = v)
+		app.game_world.configure(app.doc.model, app.doc.textures))
 	app.number_field(app.inspector, "移动 / px·s", float(app.doc.model.game.speed), 10, 600, 1, func(v: float) -> void:
 		app.edit("修改移动速度", func() -> void: app.doc.model.game.speed = v)
 		app.game_world.configure(app.doc.model, app.doc.textures))
@@ -258,13 +285,7 @@ func desktop_inspector() -> void:
 	app.desktop_stop_button = app.action_row(app.inspector, "停止试演", "pause", app.stop_desktop)
 	app.update_desktop_buttons()
 	app.action_row(app.inspector, "控制绑定", "keys", app.show_controls)
-
-	rule()
-	section("透明窗口 · 拖动 · 右键菜单")
-	for text in ["全局快捷键：暂不支持", "整窗点击穿透：暂不支持"]:
-		var line = app.label(text, 12, ThemeKit.MUTED)
-		line.custom_minimum_size.x = 0
-		app.inspector.add_child(line)
+	app.action_row(app.inspector, "状态与动作", "key", app.show_desktop_states)
 
 # --- 排版小工具 ---------------------------------------------------------
 

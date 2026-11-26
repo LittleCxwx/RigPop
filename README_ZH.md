@@ -12,19 +12,23 @@ RigPop 当前为早期 Demo，应用界面使用简体中文。
 ## 功能
 
 - 使用独立部件或完整精灵帧创建角色。
+- 内置三头身 OC 底模，可单独绘制各段四肢并替换服装与配饰，也可选择立绘模板。
+- 导入 PSD 分层素材，预览并调整骨骼匹配，保留原画位置与源文件。
 - 编辑像素与色板，导入图片并切分规则图集。
 - 使用位置、旋转关键帧、逐帧换图和叠加轨道制作动画。
 - 配置键鼠绑定，分别进行游戏试演与桌宠试演。
+- 桌宠可从系统托盘控制。普通模式支持后台动作和移动，前台应用可继续打字。聚焦模式接收桌宠控制，固定模式锁住位置并允许鼠标穿透。
+- 用按键切换持续表情或姿势，为不同状态设置专属动作，或在坐下时限制移动和跳跃。一次性动作播完后再接收新指令。
 - 将可编辑工程保存为可迁移的 JSON 与 PNG 文件。
 - 导出可编辑工程、Godot 角色包和 Windows 桌宠目录包。
 
 ## 下载
 
-前往 [GitHub Releases](https://github.com/LittleCxwx/RigPop/releases)，下载 `RigPop-<版本>-win64.zip`。
+下载 **0.1.2 Windows 便携版**。[RigPop-0.1.2-win64.zip](https://github.com/LittleCxwx/RigPop/releases/download/v0.1.2/RigPop-0.1.2-win64.zip) · [发布说明与校验值](https://github.com/LittleCxwx/RigPop/releases/tag/v0.1.2)
 
 1. 将整个压缩包解压到可写文件夹。
 2. 双击 `RigPop.exe`。
-3. 保留程序旁的 `RigPop.pck`、`hosts/` 和许可证文件。
+3. 保留程序旁的 `RigPop.pck`、`rigpop_windows.dll`、`platform/`、`hosts/`、`helpers/` 和许可证文件。
 
 便携版不需要安装 Godot、Python 或开发工具。
 页面自动生成的 **Source code** 压缩包用于源码开发。

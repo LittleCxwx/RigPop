@@ -22,7 +22,7 @@ static func export_package(doc: RefCounted, directory: String, target: String) -
 	copy.restore(doc.snapshot())
 	var data_relative: String = "characters/" + str(doc.model.id) if target == "Godot" else "character"
 	var character_relative := data_relative + "/character.rigpop.json"
-	var error: String = copy.save_to(staging.path_join(data_relative))
+	var error: String = copy.save_to(staging.path_join(data_relative), target == "工程")
 	if not error.is_empty(): return {"error": error, "path": staging}
 	if target == "Godot":
 		for path in SOURCE_FILES:
@@ -44,9 +44,11 @@ static func export_package(doc: RefCounted, directory: String, target: String) -
 		if not error.is_empty(): return {"error": error, "path": staging}
 	elif target == "桌宠":
 		var host_root := OS.get_executable_path().get_base_dir().path_join("hosts") if not OS.has_feature("editor") else ProjectSettings.globalize_path("res://build/hosts")
-		for filename in ["RigPopPet.exe", "RigPopPet.pck"]:
+		for filename in ["RigPopPet.exe", "RigPopPet.pck", "rigpop_windows.dll", "platform/windows/bin/rigpop_windows.dll"]:
 			if not FileAccess.file_exists(host_root.path_join(filename)):
 				return {"error": "缺少预构建桌宠宿主 " + filename + "。请先执行 tools/build.ps1。工程仍完整保留。", "path": staging}
+			if DirAccess.make_dir_recursive_absolute(staging.path_join(filename).get_base_dir()) != OK:
+				return {"error": "桌宠宿主目录创建失败", "path": staging}
 			if DirAccess.copy_absolute(host_root.path_join(filename), staging.path_join(filename)) != OK:
 				return {"error": "桌宠宿主复制失败", "path": staging}
 	var application_version := str(ProjectSettings.get_setting("application/config/version"))
@@ -55,7 +57,7 @@ static func export_package(doc: RefCounted, directory: String, target: String) -
 		"entry_scene": data_relative + "/character.tscn" if target == "Godot" else "", "entry_executable": "RigPopPet.exe" if target == "桌宠" else "",
 		"commands": ["move_left", "move_right", "move_up", "move_down"],
 		"coordinates": {"unit": "pixel", "origin": "feet", "positive_y": "down"},
-		"limitations": ["No global hotkeys", "No combat ability handlers", "No PSD parser", "No secondary motion solver"],
+		"limitations": ["No combat ability handlers", "No PSD parser", "No secondary motion solver"],
 		"required_modules": ["rigpop.shared.v1"], "runtime_sources": SOURCE_FILES if target == "Godot" else []}
 	error = write(staging.path_join("manifest.json"), JSON.stringify(manifest, "\t"))
 	if not error.is_empty(): return {"error": error, "path": staging}
@@ -63,9 +65,19 @@ static func export_package(doc: RefCounted, directory: String, target: String) -
 	if target == "Godot":
 		readme += "打开 project.godot 运行试演。manifest.json 的 entry_scene 是可实例化入口。\n\n合入现有项目时，只需复制 addons/rigpop_runtime/ 与 characters/ 至目标根目录，保持相对结构。共用运行目录只安装一次；重复导入前检查 manifest 中的 API 版本。将 characters/<角色ID>/character.tscn 拖入地图，地图摆放与角色创作数据独立。根目录 preview.* 与 project.godot 只供独立演示，不需要复制或覆盖用户场景。\n\n运行节点提供 configure(model, textures)、load_character(path)、execute(action_id)、clear_input()。移动由键鼠绑定执行，叠加动作只覆盖其定义的部件轨道。可用动作见 manifest.json。\n"
 	elif target == "桌宠":
-		readme += "双击 RigPopPet.exe，需保留同目录 RigPopPet.pck 与 character/。左键拖动移动；右键点按松开打开漫游、置顶与退出菜单，右键向上拖动放大、向下拖动缩小（1～8 倍整数像素）。桌宠右键不触发动作绑定，游戏中仍可使用右键绑定。窗口获得焦点时 Escape 退出。透明区域按角色轮廓的凸包穿透；不提供整窗穿透与全局热键。\n"
+		readme += "双击 RigPopPet.exe，需保留同目录 RigPopPet.pck、rigpop_windows.dll、platform/ 与 character/。桌宠不占 Windows 主任务栏按钮。\n\n- 桌宠模式：按住 WASD 约 0.2 秒移动角色，短按可以正常打字。前台应用照常接收按键。左键拖动，右键点按开菜单，按住右键上下拖动调整 1～8 倍倍率。\n- 聚焦模式：桌宠获得键盘焦点，WASD 立即移动角色，按 Esc 返回桌宠模式。点回桌宠可重新获得焦点。\n- 固定模式：锁住角色位置和倍率，鼠标可穿过角色。点击屏幕左下角的紫色 R 猫头打开菜单，切换模式、隐藏或恢复桌宠。\n"
+		readme += "\n一次性动作完整播放后恢复当前状态，期间的桌宠按键不会排队。持续状态在按下配置的切换键时切换。状态姿势、移动限制和专属动作可在 RigPop 编辑器的「桌宠试演 → 状态与动作」中设置。\n"
 	else:
 		readme += "在 RigPop 中打开 character/character.rigpop.json。PNG 与 JSON 必须一同搬移。\n"
+	if doc.model.get("modules", {}).get("rigpop.art", {}).get("source", "") == "Kenney Toon Characters / Female adventurer":
+		readme += "\n角色美术：Kenney Toon Characters / Female adventurer（CC0-1.0），https://kenney.nl/assets/toon-characters 。来源和授权见 licenses/Kenney-CC0.txt。\n"
+		error = write(staging.path_join("licenses/Kenney-CC0.txt"), FileAccess.get_file_as_string("res://licenses/Kenney-CC0.txt"))
+		if not error.is_empty(): return {"error": error, "path": staging}
+	if doc.model.get("modules", {}).get("rigpop.art", {}).get("source", "") == "Tyson Tan / Chibi Kiki II":
+		readme += "\n角色美术：Tyson Tan / Chibi Kiki II（Krita 吉祥物，CC BY-SA 4.0），https://krita.org/en/about/mascot/ 。本角色为完整立绘的位移、旋转动画，未拆分四肢骨骼。改编图片与角色动画数据继续按 CC BY-SA 4.0 授权，见 licenses/Kiki-Attribution.txt 与 CC-BY-SA-4.0.txt。\n"
+		for filename in ["Kiki-Attribution.txt", "CC-BY-SA-4.0.txt"]:
+			error = write(staging.path_join("licenses/" + filename), FileAccess.get_file_as_string("res://licenses/" + filename))
+			if not error.is_empty(): return {"error": error, "path": staging}
 	error = write(staging.path_join("README.md"), readme)
 	if not error.is_empty(): return {"error": error, "path": staging}
 	var check := Store.new()

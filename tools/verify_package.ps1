@@ -27,6 +27,17 @@ $releaseRoot = $roots[0].FullName
 foreach ($relative in @("RigPop.exe", "RigPop.pck", "hosts/RigPopPet.exe", "hosts/RigPopPet.pck", "BUILD_INFO.json", "README.md", "THIRD_PARTY_NOTICES.md", "licenses/Godot-MIT.txt", "licenses/Godot-COPYRIGHT.txt", "licenses/Noto-OFL.txt", "licenses/Lucide.txt")) {
     if (-not (Test-Path -LiteralPath (Join-Path $releaseRoot $relative) -PathType Leaf)) { throw "Missing release dependency: $relative" }
 }
+if (-not (Test-Path -LiteralPath (Join-Path $releaseRoot "helpers/psd/RigPopPsd/RigPopPsd.exe"))) { throw "Missing bundled PSD decoder." }
+foreach ($relative in @("rigpop_windows.dll", "platform/windows/bin/rigpop_windows.dll", "hosts/rigpop_windows.dll", "hosts/platform/windows/bin/rigpop_windows.dll")) {
+    if (-not (Test-Path -LiteralPath (Join-Path $releaseRoot $relative))) { throw "Missing native runtime: $relative" }
+}
+& (Join-Path $buildRoot "psd-venv/Scripts/python.exe") (Join-Path $PSScriptRoot "psd/test_import.py")
+if ($LASTEXITCODE -ne 0) { throw "PSD fixture preparation failed." }
+$psdOutput = Join-Path $testRoot "psd-check"
+& (Join-Path $releaseRoot "helpers/psd/RigPopPsd/RigPopPsd.exe") (Join-Path $projectRoot "tests/output/psd/case_1.psd") $psdOutput
+if ($LASTEXITCODE -ne 0) { throw "Bundled PSD decoder failed outside the source checkout." }
+$psdReport = Get-Content -LiteralPath (Join-Path $psdOutput "manifest.json") -Raw | ConvertFrom-Json
+if ($psdReport.error -or @($psdReport.layers).Count -ne 4) { throw "Invalid PSD decoder result." }
 
 function Invoke-ReleaseCheck([string]$Executable, [string[]]$Arguments, [string]$Log) {
     $process = Start-Process -FilePath $Executable -ArgumentList $Arguments -WorkingDirectory $testRoot -WindowStyle Hidden -PassThru
@@ -49,6 +60,8 @@ $pet = @(Get-ChildItem -LiteralPath $reports[0].DirectoryName -Filter RigPopPet.
 if ($pet.Count -ne 1) { throw "Desktop executable was not exported." }
 $petLog = Join-Path $testRoot "pet.log"
 Invoke-ReleaseCheck $pet[0].FullName @("--headless", "--log-file", ('"{0}"' -f $petLog), "--quit-after", "10") $petLog
+$nativePetLog = Join-Path $testRoot "pet-native.log"
+Invoke-ReleaseCheck $pet[0].FullName @("--log-file", ('"{0}"' -f $nativePetLog), "--quit-after", "40") $nativePetLog
 @{
     archive = $Archive
     sha256 = (Get-FileHash -LiteralPath $Archive -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -56,6 +69,7 @@ Invoke-ReleaseCheck $pet[0].FullName @("--headless", "--log-file", ('"{0}"' -f $
     installation_report = $reports[0].FullName
     editor_exit_code = 0
     desktop_exit_code = 0
+    desktop_native_exit_code = 0
     errors = @()
 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $buildRoot "release-verification.json") -Encoding utf8
 Write-Host "PASS: extracted release starts, saves, reopens, exports all three formats and runs the exported desktop character."

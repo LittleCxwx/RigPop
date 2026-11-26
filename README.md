@@ -12,19 +12,23 @@ RigPop is an early-stage demo. The application interface is currently in Simplif
 ## Features
 
 - Create characters from individual body parts or complete sprite frames.
+- Start from a three-head-tall OC base with separate limbs and optional clothing and accessories, or choose an illustrated template.
+- Import layered PSD artwork with assembly preview, adjustable rig matching, original positions, and source preservation.
 - Edit pixels and palettes, import images, and slice regular sprite sheets.
 - Animate with position and rotation keyframes, texture changes, and layered tracks.
 - Configure keyboard and mouse bindings, with separate game and desktop previews.
+- Run a desktop pet from the system tray. Background controls let the foreground app keep its keyboard input, focus mode lets you control the pet, and fixed mode locks its position and lets mouse clicks pass through.
+- Assign persistent expressions or poses to keys, set state-specific actions, or lock movement and jumping while seated. One-shot actions finish before accepting new pet commands.
 - Save editable projects as portable JSON and PNG files.
 - Export editable projects, Godot character packages, and Windows desktop pet bundles.
 
 ## Download
 
-Download `RigPop-<version>-win64.zip` from [GitHub Releases](https://github.com/LittleCxwx/RigPop/releases).
+Download the **0.1.2 Windows demo**. [RigPop-0.1.2-win64.zip](https://github.com/LittleCxwx/RigPop/releases/download/v0.1.2/RigPop-0.1.2-win64.zip) · [Release notes and checksum](https://github.com/LittleCxwx/RigPop/releases/tag/v0.1.2)
 
 1. Extract the entire archive into a writable folder.
 2. Run `RigPop.exe`.
-3. Keep `RigPop.pck`, `hosts/`, and the license files alongside the application.
+3. Keep `RigPop.pck`, `rigpop_windows.dll`, `platform/`, `hosts/`, `helpers/`, and the license files alongside the application.
 
 The portable application does not require Godot, Python, or developer tools.
 The automatically generated **Source code** archives contain the development project.

@@ -32,7 +32,7 @@ static func reparent(model: Dictionary, id: String, parent: String) -> bool:
 
 static func empty(title: String) -> Dictionary:
 	return {"format_version": FORMAT_VERSION, "id": uid("character"), "name": title,
-		"parts": [], "actions": [], "palette": ["263642", "f3f5ef", "8ecfbe", "4a9f91", "f18b80", "bcca82", "e8bd78", "9296b0"],
+		"rig": "", "parts": [], "actions": [], "palette": ["263642", "f3f5ef", "8ecfbe", "4a9f91", "f18b80", "bcca82", "e8bd78", "9296b0"],
 		"bindings": [{"key": "A", "gesture": "hold", "command": "move_left"},
 			{"key": "D", "gesture": "hold", "command": "move_right"},
 			{"key": "W", "gesture": "hold", "command": "move_up"},
@@ -85,7 +85,12 @@ static func layered_pose(clip: Dictionary, id: String, frame: int, overlay: Dict
 	var result := pose(clip, id, frame)
 	if not overlay.get("tracks", {}).get(id, []).is_empty(): result = pose(overlay, id, overlay_frame)
 	for layer in layers:
-		if not layer.clip.get("tracks", {}).get(id, []).is_empty(): result = pose(layer.clip, id, int(layer.frame))
+		if layer.clip.get("tracks", {}).get(id, []).is_empty(): continue
+		var sampled := pose(layer.clip, id, int(layer.frame))
+		if layer.get("merge_pose", false):
+			if sampled.has("frame"): result.merge(sampled, true)
+		else:
+			result = sampled
 	return result
 
 static func transforms(model: Dictionary, clip: Dictionary, frame: int, overlay: Dictionary = {}, overlay_frame: int = 0, layers: Array = []) -> Dictionary:
@@ -115,6 +120,8 @@ static func validate(model: Dictionary) -> PackedStringArray:
 	if not model.get("bindings") is Array or not model.get("game") is Dictionary or not model.get("desktop") is Dictionary or not model.get("palette") is Array:
 		errors.append("缺少控制、模式配置或色板")
 		return errors
+	if model.has("rig") and (not model.rig is String or model.rig.length() > 64):
+		errors.append("骨骼模板标识无效")
 	if not model.game.get("speed") is float and not model.game.get("speed") is int:
 		errors.append("游戏移动速度无效")
 	if not model.game.get("collision_radius") is float and not model.game.get("collision_radius") is int:
@@ -125,6 +132,9 @@ static func validate(model: Dictionary) -> PackedStringArray:
 		errors.append("桌宠配置参数无效")
 	if numeric(model.game.get("speed")) and (float(model.game.speed) < 0 or float(model.game.speed) > 4096): errors.append("移动速度超出范围")
 	if numeric(model.game.get("collision_radius")) and (float(model.game.collision_radius) < 1 or float(model.game.collision_radius) > 256): errors.append("碰撞半径超出范围")
+	if model.game.has("visual_scale"):
+		if not numeric(model.game.visual_scale): errors.append("游戏显示倍率无效")
+		elif float(model.game.visual_scale) < 0.1 or float(model.game.visual_scale) > 8: errors.append("游戏显示倍率超出范围")
 	for color in model.palette:
 		if not color is String or not color.length() in [6, 8] or not color.is_valid_hex_number(false): errors.append("色板颜色无效")
 	if model.parts.size() > 256 or model.actions.size() > 256:
@@ -138,6 +148,10 @@ static func validate(model: Dictionary) -> PackedStringArray:
 			errors.append("部件 ID 重复：%s" % p.id)
 		if not p.id is String or not safe_id(str(p.id)) or not p.name is String or not p.parent is String or not p.visible is bool or not numeric(p.rotation) or not numeric(p.z): errors.append("部件字段类型无效")
 		if p.has("kind") and p.kind not in ["part", "joint"]: errors.append("部件类型无效")
+		if p.has("role") and (not p.role is String or p.role.length() > 64):
+			errors.append("部件骨骼角色无效：%s" % p.id)
+		if p.has("role") and p.role is String and not p.role.is_empty() and not safe_id(str(p.role)):
+			errors.append("部件骨骼角色只能使用字母、数字、下划线与连字符：%s" % p.id)
 		ids[p.id] = true
 		for field in ["position", "pivot"]:
 			if not valid_vector(p[field]):

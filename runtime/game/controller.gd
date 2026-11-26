@@ -43,6 +43,7 @@ func configure(data: Dictionary, art: Dictionary) -> void:
 	if view != null:
 		view.model = model
 		view.textures = textures
+		view.scale = Vector2.ONE * float(model.get("game", {}).get("visual_scale", 2.0))
 	var collision := get_node_or_null("Collision") as CollisionShape2D
 	if collision != null:
 		var shape := CircleShape2D.new()
